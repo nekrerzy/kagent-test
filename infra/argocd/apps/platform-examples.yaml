@@ -1,0 +1,26 @@
+# Wave 2 (after every controller is up) so the Agent/RemoteMCPServer/MCPServer/Gateway
+# CRDs it uses are already registered when this app syncs.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-examples
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nekrerzy/kagent-test.git
+    targetRevision: main
+    path: examples
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kagent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

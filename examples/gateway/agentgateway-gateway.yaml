@@ -1,0 +1,19 @@
+# Lives under examples/ (wave 2) rather than infra/agentgateway/ so it's
+# guaranteed to sync after the agentgateway controller + GatewayClass (wave 1)
+# exist, without adding a third source to the agentgateway Application.
+# No static IP annotation: MetalLB (pool 10.20.0.100-200) assigns the next free
+# address to the LoadBalancer Service the controller provisions for this Gateway.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: agentgateway
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: agentgateway
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All

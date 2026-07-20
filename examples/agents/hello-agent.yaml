@@ -1,0 +1,38 @@
+# RemoteMCPServer pointing at the kmcp-managed Service from
+# examples/mcp-server/mcpserver.yaml (Service name == MCPServer name, port 3000,
+# Streamable HTTP at /mcp — verified against the kmcp controller's transport
+# adapter, which always exposes /mcp regardless of the upstream's own transport).
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: hello-mcp-server
+  namespace: kagent
+spec:
+  description: "Phase 0 smoke-test MCP server (npx @modelcontextprotocol/server-everything, via kmcp)"
+  protocol: STREAMABLE_HTTP
+  url: "http://hello-mcp-server.kagent.svc.cluster.local:3000/mcp"
+---
+# Minimal declarative smoke-test agent. toolNames is intentionally omitted on the
+# mcpServer tool reference (unlike kagent's own built-in agents, which pin exact
+# tool names) so it exposes whatever tools the "everything" server reports at
+# discovery time, without guessing its tool names up front.
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: hello-agent
+  namespace: kagent
+spec:
+  type: Declarative
+  description: "Phase 0 smoke-test agent: answers using the hello-mcp-server tools."
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      You are a friendly demo agent for the Agents Platform Phase 0 smoke test.
+      When asked to demonstrate a tool, call one of your available MCP tools and
+      report both the tool name you used and its result.
+    tools:
+      - type: McpServer
+        mcpServer:
+          kind: RemoteMCPServer
+          apiGroup: kagent.dev
+          name: hello-mcp-server

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agentgateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: oci://cr.agentgateway.dev/charts
+      chart: agentgateway
+      targetRevision: "1.3.1"
+      helm:
+        valueFiles:
+          - $values/infra/agentgateway/values.yaml
+    - repoURL: https://github.com/nekrerzy/kagent-test.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: agentgateway-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

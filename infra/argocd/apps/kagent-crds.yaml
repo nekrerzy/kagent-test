@@ -1,0 +1,25 @@
+# CRDs must land before the kagent controller (wave 1) reconciles anything.
+# No values file: this chart's defaults (kmcp CRDs bundled in, substrate CRDs off)
+# are exactly what we want — see infra/kagent/values.yaml for why.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kagent-crds
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: oci://ghcr.io/kagent-dev/kagent/helm
+    chart: kagent-crds
+    targetRevision: "0.9.12"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kagent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

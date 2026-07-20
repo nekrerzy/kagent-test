@@ -1,0 +1,24 @@
+# App-of-apps: the only manifest ever applied manually (`make argocd-bootstrap`).
+# Everything else is discovered by ArgoCD from infra/argocd/apps/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nekrerzy/kagent-test.git
+    targetRevision: main
+    path: infra/argocd/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

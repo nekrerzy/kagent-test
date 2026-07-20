@@ -1,0 +1,3 @@
+# kmcp controller chart values — pinned to chart version 0.3.0 (see
+# infra/argocd/apps/kmcp.yaml). Chart defaults are already restricted-PSA
+# compliant (podSecurityContext/securityContext) and minimal, so no overrides.

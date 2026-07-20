@@ -1,0 +1,31 @@
+# kmcp controller only. Its CRDs (MCPServer, kagent.dev/v1alpha1) are installed by
+# kagent-crds (wave 0), which bundles the kmcp-crds chart by default — see
+# infra/kagent/values.yaml for why we don't install a separate kmcp-crds app here.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kmcp
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: oci://ghcr.io/kagent-dev/kmcp/helm
+      chart: kmcp
+      targetRevision: "0.3.0"
+      helm:
+        valueFiles:
+          - $values/infra/kmcp/values.yaml
+    - repoURL: https://github.com/nekrerzy/kagent-test.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kmcp-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

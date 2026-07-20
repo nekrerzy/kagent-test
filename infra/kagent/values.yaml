@@ -1,0 +1,108 @@
+# kagent Helm chart values — pinned to chart version 0.9.12 (see
+# infra/argocd/apps/kagent.yaml). Image tags are left at the chart default
+# (registry cr.kagent.dev, tag defaults to the chart version) — do not override.
+
+# ==============================================================================
+# LLM PROVIDER — local llama-swap, OpenAI-compatible
+# ==============================================================================
+# Becomes the "default-model-config" ModelConfig (kagent.dev/v1alpha2) referenced
+# by examples/agents/hello-agent.yaml.
+providers:
+  default: openAI
+  openAI:
+    provider: OpenAI
+    model: "qwen3.6-35b-a3b"
+    apiKeySecretRef: kagent-openai
+    apiKeySecretKey: OPENAI_API_KEY
+    # DUMMY KEY: llama-swap does not check it, LAN-only, chart writes it into the
+    # kagent-openai Secret referenced above. Real cloud provider keys must NEVER
+    # be committed to git — use a pre-created Secret + apiKeySecretRef instead.
+    apiKey: "sk-local-llama-swap-dummy-not-a-real-key"
+    config:
+      baseUrl: "http://10.20.0.1:9292/v1"
+
+# ==============================================================================
+# DATABASE — bundled Postgres, dev/eval only, per chart default sizes
+# ==============================================================================
+database:
+  postgres:
+    vectorEnabled: true
+    bundled:
+      enabled: true
+      # Chart's default bundled image (postgres:18.3-alpine) has no pgvector
+      # extension compiled in, so vectorEnabled: true alone would fail the
+      # "CREATE EXTENSION vector" migration. Swap in the pgvector build of the
+      # same Postgres major version (18); it's still the official postgres
+      # image underneath, same postgres UID (999) the chart's securityContext
+      # below already assumes.
+      image:
+        registry: docker.io
+        repository: pgvector
+        name: pgvector
+        tag: "0.8.4-pg18"
+
+# ==============================================================================
+# CONTROLLER — auth stays at chart default (unsecure)
+# ==============================================================================
+controller:
+  # unsecure = no authn/authz in kagent itself (NoopAuthorizer). Deliberate for
+  # Phase 0: the platform API is the intended trust boundary (Phase 1+); kagent's
+  # controller/UI must stay LAN/cluster-internal only, never exposed externally.
+  auth:
+    mode: unsecure
+
+# ==============================================================================
+# KMCP — disabled here; installed separately by infra/argocd/apps/kmcp.yaml
+# ==============================================================================
+# This chart bundles its own kmcp controller subchart (condition kmcp.enabled,
+# default true). We deploy kmcp standalone (its own namespace/app, per spec), so
+# leaving this on would run two kmcp controllers cluster-wide, both watching the
+# same MCPServer CRDs and fighting over reconciliation. kagent-crds still
+# installs the MCPServer CRDs (its kmcp-crds sub-dependency stays at its
+# default true) — only the controller Deployment is skipped here.
+kmcp:
+  enabled: false
+
+# ==============================================================================
+# BUILT-IN TOOLS / OPS AGENTS — disabled, out of Phase 0 scope
+# ==============================================================================
+# The chart enables ~13 extra components by default: a built-in kagent-tools MCP
+# server plus pre-built ops agents (k8s, kgateway, istio, promql, observability,
+# argo-rollouts, helm, 3x cilium) and MCP tool servers (grafana-mcp, querydoc).
+# Most assume infra this cluster doesn't have (Prometheus, Istio, Cilium,
+# Grafana, Argo Rollouts) and would just sit unready. Phase 0's smoke path is
+# our own hello-agent + kmcp MCPServer (examples/), so switch all of these off
+# to keep `kubectl get pods -n kagent` limited to what we actually use.
+kagent-tools:
+  enabled: false
+k8s-agent:
+  enabled: false
+kgateway-agent:
+  enabled: false
+istio-agent:
+  enabled: false
+promql-agent:
+  enabled: false
+observability-agent:
+  enabled: false
+argo-rollouts-agent:
+  enabled: false
+helm-agent:
+  enabled: false
+cilium-policy-agent:
+  enabled: false
+cilium-manager-agent:
+  enabled: false
+cilium-debug-agent:
+  enabled: false
+grafana-mcp:
+  enabled: false
+querydoc:
+  enabled: false
+
+# ==============================================================================
+# SUBSTRATE — stays off (chart default). v0.10 sandbox/substrate feature; we're
+# pinned to v0.9.12 and don't have an Agent Substrate (ate-system) installed.
+# ==============================================================================
+substrate:
+  enabled: false

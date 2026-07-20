@@ -1,0 +1,40 @@
+# kmcp's own documented "getting started" path (kagent.dev/docs/kmcp/deploy/server,
+# Option 1): run a public MCP server package via npx, no custom image to build/verify.
+# Package: @modelcontextprotocol/server-everything (official MCP reference server —
+# echo/add/sampling/etc. test tools). kmcp injects node:24-alpine3.21 as the
+# container image automatically because cmd is "npx" (no image needs to be set).
+#
+# The controller fronts it with its own transport-adapter sidecar, exposing both
+# servers on spec.deployment.port at paths /mcp (Streamable HTTP) and /sse — see
+# examples/agents/hello-agent.yaml's RemoteMCPServer for the resulting URL.
+apiVersion: kagent.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: hello-mcp-server
+  namespace: kagent
+spec:
+  transportType: stdio
+  stdioTransport: {}
+  deployment:
+    cmd: npx
+    args:
+      - "@modelcontextprotocol/server-everything"
+    port: 3000
+    # Required for restricted Pod Security Admission (enforced cluster-wide by
+    # default here) — the chart/CRD leaves these unset otherwise. runAsUser 1000
+    # is the built-in non-root "node" user in node:24-alpine3.21. Falls back to
+    # the init container too (it has no securityContext of its own in this spec).
+    # readOnlyRootFilesystem intentionally NOT set: npx needs to write its
+    # package cache at runtime.
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kagent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: oci://ghcr.io/kagent-dev/kagent/helm
+      chart: kagent
+      targetRevision: "0.9.12"
+      helm:
+        valueFiles:
+          - $values/infra/kagent/values.yaml
+    - repoURL: https://github.com/nekrerzy/kagent-test.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kagent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
