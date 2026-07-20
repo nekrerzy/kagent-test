@@ -1,0 +1,41 @@
+# Registers the public OCI Helm registries with ArgoCD (enableOCI). Without
+# these, Application sources using `chart:` against an OCI registry fail to
+# resolve. No credentials involved — all three registries are public.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-kagent-helm
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: kagent-helm
+  url: ghcr.io/kagent-dev/kagent/helm
+  type: helm
+  enableOCI: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-kmcp-helm
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: kmcp-helm
+  url: ghcr.io/kagent-dev/kmcp/helm
+  type: helm
+  enableOCI: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-agentgateway-helm
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: agentgateway-helm
+  url: cr.agentgateway.dev/charts
+  type: helm
+  enableOCI: "true"
