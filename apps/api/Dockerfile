@@ -1,7 +1,7 @@
 # Build context is the REPO ROOT (needs the root uv.lock + workspace pyproject.toml).
 # docker build -f apps/api/Dockerfile .
 
-FROM ghcr.io/astral-sh/uv:0.11-python3.13-bookworm-slim AS build
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS build
 
 WORKDIR /workspace
 

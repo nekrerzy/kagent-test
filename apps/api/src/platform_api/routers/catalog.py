@@ -50,9 +50,15 @@ def get_catalog(
 ) -> CatalogOut:
     ns = namespace or settings.default_namespace
 
-    agents = [mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)]
-    mcp_servers = [mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)]
-    model_configs = [mappers.model_config_from_crd(obj) for obj in k8s.list(PLURAL_MODEL_CONFIGS, ns)]
+    agents = [
+        mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)
+    ]
+    mcp_servers = [
+        mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)
+    ]
+    model_configs = [
+        mappers.model_config_from_crd(obj) for obj in k8s.list(PLURAL_MODEL_CONFIGS, ns)
+    ]
 
     if q:
         q_lower = q.lower()

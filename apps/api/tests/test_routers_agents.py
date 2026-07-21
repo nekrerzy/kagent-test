@@ -57,5 +57,7 @@ def test_delete_agent(client):
 
 def test_create_agent_conflict(client):
     client.post("/v1/agents", json={"name": "a1", "namespace": "kagent", "system_message": "hi"})
-    resp = client.post("/v1/agents", json={"name": "a1", "namespace": "kagent", "system_message": "hi"})
+    resp = client.post(
+        "/v1/agents", json={"name": "a1", "namespace": "kagent", "system_message": "hi"}
+    )
     assert resp.status_code == 409

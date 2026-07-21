@@ -45,7 +45,9 @@ class FakeK8sClient:
         self.store[key] = stored
         return copy.deepcopy(stored)
 
-    def replace(self, plural: str, namespace: str, name: str, body: dict[str, Any]) -> dict[str, Any]:
+    def replace(
+        self, plural: str, namespace: str, name: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
         key = (plural, namespace, name)
         if key not in self.store:
             raise HTTPException(status_code=404, detail="resource not found")

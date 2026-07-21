@@ -25,7 +25,9 @@ def list_model_configs(
 def create_model_config(mc: ModelConfigIn, k8s: K8sDep, settings: SettingsDep) -> ModelConfigOut:
     ns = mc.namespace or settings.default_namespace
     if mc.api_key is not None:
-        k8s.put_secret(ns, mappers.model_config_secret_name(mc.name), {mappers.API_KEY_SECRET_KEY: mc.api_key})
+        k8s.put_secret(
+            ns, mappers.model_config_secret_name(mc.name), {mappers.API_KEY_SECRET_KEY: mc.api_key}
+        )
     created = k8s.create(PLURAL_MODEL_CONFIGS, ns, mappers.model_config_to_crd(mc, ns))
     return mappers.model_config_from_crd(created)
 
@@ -37,19 +39,27 @@ def get_model_config(namespace: str, name: str, k8s: K8sDep) -> ModelConfigOut:
 
 
 @router.put("/{namespace}/{name}", response_model=ModelConfigOut)
-def update_model_config(namespace: str, name: str, mc: ModelConfigIn, k8s: K8sDep) -> ModelConfigOut:
+def update_model_config(
+    namespace: str, name: str, mc: ModelConfigIn, k8s: K8sDep
+) -> ModelConfigOut:
     existing = k8s.get(PLURAL_MODEL_CONFIGS, namespace, name)
     body = mappers.model_config_to_crd(mc, namespace)
 
     if mc.api_key is not None:
         # Rotate the key.
-        k8s.put_secret(namespace, mappers.model_config_secret_name(name), {mappers.API_KEY_SECRET_KEY: mc.api_key})
+        k8s.put_secret(
+            namespace,
+            mappers.model_config_secret_name(name),
+            {mappers.API_KEY_SECRET_KEY: mc.api_key},
+        )
     else:
         # Not rotating: keep whatever secret ref the CRD already had.
         existing_spec = existing.get("spec", {})
         if "apiKeySecretRef" in existing_spec:
             body["spec"]["apiKeySecretRef"] = existing_spec["apiKeySecretRef"]
-            body["spec"]["apiKeySecretKey"] = existing_spec.get("apiKeySecretKey", mappers.API_KEY_SECRET_KEY)
+            body["spec"]["apiKeySecretKey"] = existing_spec.get(
+                "apiKeySecretKey", mappers.API_KEY_SECRET_KEY
+            )
 
     body["metadata"]["resourceVersion"] = existing["metadata"]["resourceVersion"]
     updated = k8s.replace(PLURAL_MODEL_CONFIGS, namespace, name, body)

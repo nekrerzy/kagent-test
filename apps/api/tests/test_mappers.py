@@ -15,14 +15,19 @@ def test_agent_round_trip_minimal():
     assert "modelConfig" not in crd["spec"]["declarative"]
 
     crd["status"] = {}
-    out = mappers.agent_from_crd(crd, kagent_api_base="http://kagent-controller.kagent.svc.cluster.local:8083")
+    out = mappers.agent_from_crd(
+        crd, kagent_api_base="http://kagent-controller.kagent.svc.cluster.local:8083"
+    )
     assert out.name == "hello-agent"
     assert out.namespace == "kagent"
     assert out.system_message == "You are helpful."
     assert out.tools == []
     assert out.tags == []
     assert out.ready is None
-    assert out.a2a_url == "http://kagent-controller.kagent.svc.cluster.local:8083/api/a2a/kagent/hello-agent"
+    assert (
+        out.a2a_url
+        == "http://kagent-controller.kagent.svc.cluster.local:8083/api/a2a/kagent/hello-agent"
+    )
 
 
 def test_agent_round_trip_full():
@@ -45,7 +50,11 @@ def test_agent_round_trip_full():
     tools = crd["spec"]["declarative"]["tools"]
     assert tools[0] == {
         "type": "McpServer",
-        "mcpServer": {"kind": "RemoteMCPServer", "apiGroup": "kagent.dev", "name": "hello-mcp-server"},
+        "mcpServer": {
+            "kind": "RemoteMCPServer",
+            "apiGroup": "kagent.dev",
+            "name": "hello-mcp-server",
+        },
     }
     assert tools[1]["mcpServer"]["toolNames"] == ["add", "echo"]
     assert crd["metadata"]["annotations"] == {"platform.kagent.dev/tags": "demo,smoke-test"}

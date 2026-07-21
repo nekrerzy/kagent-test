@@ -15,7 +15,9 @@ def test_create_model_config_never_returns_api_key(client, fake_k8s):
     assert body["base_url"] == "http://10.20.0.1:9292/v1"
 
     # Secret was written with the expected name/key.
-    assert fake_k8s.secrets[("kagent", "default-model-config-apikey")] == {"apiKey": "sk-local-dummy"}
+    assert fake_k8s.secrets[("kagent", "default-model-config-apikey")] == {
+        "apiKey": "sk-local-dummy"
+    }
 
 
 def test_update_model_config_without_api_key_preserves_secret_ref(client, fake_k8s):

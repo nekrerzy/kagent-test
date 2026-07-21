@@ -14,7 +14,9 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 @router.get("", response_model=list[McpServerOut])
-def list_mcp_servers(k8s: K8sDep, settings: SettingsDep, namespace: str | None = Query(default=None)) -> list[McpServerOut]:
+def list_mcp_servers(
+    k8s: K8sDep, settings: SettingsDep, namespace: str | None = Query(default=None)
+) -> list[McpServerOut]:
     ns = namespace or settings.default_namespace
     return [mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)]
 

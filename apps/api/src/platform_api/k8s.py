@@ -46,17 +46,37 @@ class K8sClient:
     """Namespaced CRUD over kagent.dev/v1alpha2 custom objects, plus Secrets."""
 
     def __init__(self, settings: Settings) -> None:
-        _load_kube_config(settings)
+        # Deferred rather than raised here: a missing/invalid kubeconfig (e.g.
+        # no cluster reachable at all, as in a local `docker run` with no
+        # mounted kubeconfig) would otherwise blow up FastAPI's dependency
+        # resolution before any route — including /healthz's own
+        # reachability check — gets a chance to turn it into a clean error.
+        self._config_error: Exception | None = None
+        try:
+            _load_kube_config(settings)
+        except Exception as exc:  # noqa: BLE001 - deliberately broad, see above
+            self._config_error = exc
+            return
         self._custom = client.CustomObjectsApi()
         self._core = client.CoreV1Api()
 
+    def _require_config(self) -> None:
+        if self._config_error is not None:
+            raise HTTPException(
+                status_code=503, detail=f"kubernetes API unreachable: {self._config_error}"
+            )
+
     def get(self, plural: str, namespace: str, name: str) -> dict[str, Any]:
+        self._require_config()
         try:
-            return self._custom.get_namespaced_custom_object(GROUP, VERSION, namespace, plural, name)
+            return self._custom.get_namespaced_custom_object(
+                GROUP, VERSION, namespace, plural, name
+            )
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
 
     def list(self, plural: str, namespace: str) -> list[dict[str, Any]]:
+        self._require_config()
         try:
             result = self._custom.list_namespaced_custom_object(GROUP, VERSION, namespace, plural)
         except ApiException as exc:
@@ -64,18 +84,27 @@ class K8sClient:
         return result.get("items", [])
 
     def create(self, plural: str, namespace: str, body: dict[str, Any]) -> dict[str, Any]:
+        self._require_config()
         try:
-            return self._custom.create_namespaced_custom_object(GROUP, VERSION, namespace, plural, body)
+            return self._custom.create_namespaced_custom_object(
+                GROUP, VERSION, namespace, plural, body
+            )
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
 
-    def replace(self, plural: str, namespace: str, name: str, body: dict[str, Any]) -> dict[str, Any]:
+    def replace(
+        self, plural: str, namespace: str, name: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        self._require_config()
         try:
-            return self._custom.replace_namespaced_custom_object(GROUP, VERSION, namespace, plural, name, body)
+            return self._custom.replace_namespaced_custom_object(
+                GROUP, VERSION, namespace, plural, name, body
+            )
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
 
     def delete(self, plural: str, namespace: str, name: str) -> None:
+        self._require_config()
         try:
             self._custom.delete_namespaced_custom_object(GROUP, VERSION, namespace, plural, name)
         except ApiException as exc:
@@ -83,6 +112,7 @@ class K8sClient:
 
     def put_secret(self, namespace: str, name: str, string_data: dict[str, str]) -> None:
         """Create the Secret, or replace it in place if it already exists."""
+        self._require_config()
         body = client.V1Secret(
             metadata=client.V1ObjectMeta(name=name, namespace=namespace),
             string_data=string_data,
@@ -99,6 +129,7 @@ class K8sClient:
 
     def delete_secret(self, namespace: str, name: str) -> None:
         """Delete the Secret, ignoring "already gone" (idempotent cleanup)."""
+        self._require_config()
         try:
             self._core.delete_namespaced_secret(name, namespace)
         except ApiException as exc:

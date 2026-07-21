@@ -54,8 +54,14 @@ async def test_invoke_agent_task_shaped_result_with_artifacts():
                     "contextId": "ctx-2",
                     "status": {"state": "completed"},
                     "artifacts": [
-                        {"artifactId": "art-1", "parts": [{"kind": "text", "text": "answer part 1"}]},
-                        {"artifactId": "art-2", "parts": [{"kind": "text", "text": "answer part 2"}]},
+                        {
+                            "artifactId": "art-1",
+                            "parts": [{"kind": "text", "text": "answer part 1"}],
+                        },
+                        {
+                            "artifactId": "art-2",
+                            "parts": [{"kind": "text", "text": "answer part 2"}],
+                        },
                     ],
                 },
             },
@@ -78,7 +84,9 @@ async def test_invoke_agent_includes_context_id_when_session_given():
         return httpx.Response(200, json={"jsonrpc": "2.0", "id": "1", "result": {"parts": []}})
 
     async with _client_with(handler) as http_client:
-        await kagent_client.invoke_agent("kagent", "hello-agent", "hi", "ctx-99", client=http_client)
+        await kagent_client.invoke_agent(
+            "kagent", "hello-agent", "hi", "ctx-99", client=http_client
+        )
 
     assert captured["message"]["contextId"] == "ctx-99"
 
@@ -87,7 +95,11 @@ async def test_invoke_agent_jsonrpc_error_raises_502():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json={"jsonrpc": "2.0", "id": "1", "error": {"code": -32000, "message": "agent not found"}},
+            json={
+                "jsonrpc": "2.0",
+                "id": "1",
+                "error": {"code": -32000, "message": "agent not found"},
+            },
         )
 
     async with _client_with(handler) as http_client:

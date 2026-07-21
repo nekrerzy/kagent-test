@@ -93,7 +93,9 @@ async def invoke_agent(
         data = resp.json()
         error = data.get("error")
         if error:
-            raise HTTPException(status_code=502, detail=f"kagent error: {error.get('message', error)}")
+            raise HTTPException(
+                status_code=502, detail=f"kagent error: {error.get('message', error)}"
+            )
 
         return _parse_result(data.get("result") or {})
     finally:
@@ -111,7 +113,12 @@ def _parse_result(result: dict[str, Any]) -> dict[str, Any]:
     if "parts" in result:
         parts_groups.append(result.get("parts") or [])
 
-    texts = [part.get("text", "") for parts in parts_groups for part in parts if part.get("kind") == "text"]
+    texts = [
+        part.get("text", "")
+        for parts in parts_groups
+        for part in parts
+        if part.get("kind") == "text"
+    ]
 
     return {
         "text": "\n".join(t for t in texts if t),

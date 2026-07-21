@@ -14,9 +14,13 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 @router.get("", response_model=list[AgentOut])
-def list_agents(k8s: K8sDep, settings: SettingsDep, namespace: str | None = Query(default=None)) -> list[AgentOut]:
+def list_agents(
+    k8s: K8sDep, settings: SettingsDep, namespace: str | None = Query(default=None)
+) -> list[AgentOut]:
     ns = namespace or settings.default_namespace
-    return [mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)]
+    return [
+        mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)
+    ]
 
 
 @router.post("", response_model=AgentOut, status_code=201)
@@ -33,7 +37,9 @@ def get_agent(namespace: str, name: str, k8s: K8sDep, settings: SettingsDep) -> 
 
 
 @router.put("/{namespace}/{name}", response_model=AgentOut)
-def update_agent(namespace: str, name: str, agent: AgentIn, k8s: K8sDep, settings: SettingsDep) -> AgentOut:
+def update_agent(
+    namespace: str, name: str, agent: AgentIn, k8s: K8sDep, settings: SettingsDep
+) -> AgentOut:
     existing = k8s.get(PLURAL_AGENTS, namespace, name)
     body = mappers.agent_to_crd(agent, namespace)
     body["metadata"]["resourceVersion"] = existing["metadata"]["resourceVersion"]
