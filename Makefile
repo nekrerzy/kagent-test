@@ -41,5 +41,5 @@ api-deploy: api-build api-push ## Build, push, and restart the API deployment
 	$(KUBECTL) rollout status deployment/platform-api -n platform --timeout=120s
 
 .PHONY: smoke
-smoke: ## End-to-end smoke test: agent + MCP tool round trip (Phase 0: manual checks; scripted in Phase 1)
-	@echo "TODO(phase-1): scripted smoke test" && exit 1
+smoke: ## End-to-end smoke test: agent + MCP tool round trip over A2A
+	bash scripts/smoke.sh
