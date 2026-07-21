@@ -25,6 +25,18 @@ due-diligence notes.
 Talos homelab, kubectl context `admin@homelab`. Local LLM inference (llama-swap,
 OpenAI-compatible) at `http://10.20.0.1:9292/v1` — models `gemma`, `gpt-oss`, `qwen`.
 
+## Access (LAN)
+
+| What | URL |
+|---|---|
+| Portal | http://portal.10.20.0.100.sslip.io |
+| Platform API (OpenAPI at `/docs`) | http://api.10.20.0.100.sslip.io |
+| agentgateway data plane | http://10.20.0.101 |
+
+Images are served from a local registry at `10.20.0.1:5050` — see
+[docs/local-registry.md](docs/local-registry.md) for the one-time Talos
+node configuration.
+
 ## Tasks
 
 ```sh
