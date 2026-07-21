@@ -149,3 +149,79 @@ async def test_get_agent_card_falls_back_to_agent_json():
         "/api/a2a/kagent/hello-agent/.well-known/agent-card.json",
         "/api/a2a/kagent/hello-agent/.well-known/agent.json",
     ]
+
+
+def _sse_body(events: list[dict]) -> str:
+    return "".join(f"data: {json.dumps(e)}\n\n" for e in events)
+
+
+def _stream_client(body: str) -> httpx.AsyncClient:
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=body))
+    return httpx.AsyncClient(transport=transport, base_url="http://kagent.test")
+
+
+def _agent_text_event(text: str, partial: bool | None, ctx: str = "ctx-1") -> dict:
+    return {
+        "jsonrpc": "2.0",
+        "id": "x",
+        "result": {
+            "kind": "status-update",
+            "contextId": ctx,
+            "final": False,
+            "status": {
+                "message": {
+                    "kind": "message",
+                    "role": "agent",
+                    "metadata": {"kagent_adk_partial": partial},
+                    "parts": [{"kind": "text", "text": text}],
+                }
+            },
+        },
+    }
+
+
+async def test_stream_agent_partial_chunks_accumulate_then_full_replaces():
+    events = [
+        _agent_text_event("Hel", True),
+        _agent_text_event("lo!", True),
+        _agent_text_event("Hello!", None),
+    ]
+    async with _stream_client(_sse_body(events)) as client:
+        out = [e async for e in kagent_client.stream_agent("kagent", "a", "hi", client=client)]
+    snapshots = [e["text"] for e in out if "text" in e and not e["done"]]
+    assert snapshots == ["Hel", "Hello!", "Hello!"]
+    assert out[-1] == {"text": "Hello!", "done": True, "context_id": "ctx-1"}
+
+
+async def test_stream_agent_emits_tool_calls():
+    tool_event = {
+        "jsonrpc": "2.0",
+        "id": "x",
+        "result": {
+            "kind": "status-update",
+            "contextId": "ctx-1",
+            "status": {
+                "message": {
+                    "kind": "message",
+                    "role": "agent",
+                    "parts": [
+                        {
+                            "kind": "data",
+                            "data": {"name": "get-sum", "args": {"a": 1}},
+                            "metadata": {"kagent_type": "function_call"},
+                        }
+                    ],
+                }
+            },
+        },
+    }
+    async with _stream_client(_sse_body([tool_event])) as client:
+        out = [e async for e in kagent_client.stream_agent("kagent", "a", "hi", client=client)]
+    assert {"tool": "get-sum", "done": False} in out
+
+
+async def test_stream_agent_jsonrpc_error_yields_error_event():
+    events = [{"jsonrpc": "2.0", "id": "x", "error": {"code": -32000, "message": "boom"}}]
+    async with _stream_client(_sse_body(events)) as client:
+        out = [e async for e in kagent_client.stream_agent("kagent", "a", "hi", client=client)]
+    assert out == [{"error": "kagent error: boom", "done": True}]

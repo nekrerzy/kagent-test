@@ -194,6 +194,68 @@ export function invokeAgent(
   });
 }
 
+export interface StreamEvent {
+  // `text` is a full snapshot of the answer so far (not a delta) — replace, don't append.
+  text?: string;
+  tool?: string;
+  error?: string;
+  context_id?: string | null;
+  done: boolean;
+}
+
+export async function streamAgent(
+  ns: string,
+  name: string,
+  input: InvokeIn,
+  onEvent: (event: StreamEvent) => void,
+): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/v1/agents/${ns}/${name}/invoke/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: json(input),
+    });
+  } catch {
+    throw new ApiError(
+      `Could not reach the platform API at ${API_BASE}. Is it running?`,
+      0,
+    );
+  }
+  if (!res.ok || !res.body) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      if (body && typeof body.detail === "string") detail = body.detail;
+    } catch {
+      // response wasn't JSON, fall back to statusText
+    }
+    throw new ApiError(detail, res.status);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const frames = buf.split("\n\n");
+    buf = frames.pop() ?? "";
+    for (const frame of frames) {
+      const dataLine = frame
+        .split("\n")
+        .find((line) => line.startsWith("data:"));
+      if (!dataLine) continue;
+      try {
+        onEvent(JSON.parse(dataLine.slice(5)));
+      } catch {
+        // skip malformed frame
+      }
+    }
+  }
+}
+
 // ---- mcp servers --------------------------------------------------------
 
 export function listMcpServers(): Promise<McpServerOut[]> {

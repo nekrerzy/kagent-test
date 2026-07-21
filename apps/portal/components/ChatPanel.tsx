@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ApiError, invokeAgent } from "@/lib/api";
+import { ApiError, streamAgent } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 
 interface Message {
@@ -15,26 +15,55 @@ export function ChatPanel({ namespace, name }: { namespace: string; name: string
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  const [activity, setActivity] = useState<string | null>(null);
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || busy) return;
 
-    setMessages((m) => [...m, { role: "user", text }]);
+    setMessages((m) => [...m, { role: "user", text }, { role: "agent", text: "" }]);
     setInput("");
     setBusy(true);
-    try {
-      const result = await invokeAgent(namespace, name, {
-        text,
-        session_id: sessionId,
+    setActivity("thinking…");
+
+    // Events carry full-text snapshots, so each one replaces the last bubble.
+    const setAgentText = (t: string) =>
+      setMessages((m) => {
+        const next = m.slice();
+        next[next.length - 1] = { role: "agent", text: t };
+        return next;
       });
-      if (result.context_id) setSessionId(result.context_id);
-      setMessages((m) => [...m, { role: "agent", text: result.text }]);
+
+    try {
+      await streamAgent(
+        namespace,
+        name,
+        { text, session_id: sessionId },
+        (event) => {
+          if (event.error) {
+            showError(event.error);
+            return;
+          }
+          if (event.tool) setActivity(`calling tool ${event.tool}…`);
+          if (typeof event.text === "string" && event.text) {
+            setActivity(null);
+            setAgentText(event.text);
+          }
+          if (event.done && event.context_id) setSessionId(event.context_id);
+        },
+      );
     } catch (err) {
       showError(err instanceof ApiError ? err.message : "Invoke failed");
+      // drop the empty placeholder bubble if nothing ever streamed in
+      setMessages((m) =>
+        m.length && m[m.length - 1].role === "agent" && !m[m.length - 1].text
+          ? m.slice(0, -1)
+          : m,
+      );
     } finally {
       setBusy(false);
+      setActivity(null);
     }
   };
 
@@ -47,25 +76,27 @@ export function ChatPanel({ namespace, name }: { namespace: string; name: string
           </p>
         )}
         <div className="flex flex-col gap-3">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className="max-w-[85%] rounded-md px-3 py-2 text-sm whitespace-pre-wrap"
-              style={
-                msg.role === "user"
-                  ? { alignSelf: "flex-end", background: "var(--accent)", color: "var(--accent-foreground)" }
-                  : { alignSelf: "flex-start", background: "var(--border)" }
-              }
-            >
-              {msg.text}
-            </div>
-          ))}
-          {busy && (
+          {messages.map((msg, i) =>
+            msg.role === "agent" && !msg.text ? null : (
+              <div
+                key={i}
+                className="max-w-[85%] rounded-md px-3 py-2 text-sm whitespace-pre-wrap"
+                style={
+                  msg.role === "user"
+                    ? { alignSelf: "flex-end", background: "var(--accent)", color: "var(--accent-foreground)" }
+                    : { alignSelf: "flex-start", background: "var(--border)" }
+                }
+              >
+                {msg.text}
+              </div>
+            ),
+          )}
+          {busy && activity && (
             <div
               className="max-w-[85%] rounded-md px-3 py-2 text-sm"
               style={{ alignSelf: "flex-start", background: "var(--border)", color: "var(--muted)" }}
             >
-              thinking…
+              {activity}
             </div>
           )}
         </div>

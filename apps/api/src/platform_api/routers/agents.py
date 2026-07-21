@@ -1,6 +1,9 @@
+import json
+from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 
 from platform_api import kagent_client, mappers
 from platform_api.config import Settings, get_settings
@@ -61,3 +64,16 @@ async def get_agent_card(namespace: str, name: str) -> dict:
 async def invoke_agent(namespace: str, name: str, body: InvokeIn) -> InvokeOut:
     result = await kagent_client.invoke_agent(namespace, name, body.text, body.session_id)
     return InvokeOut(**result)
+
+
+@router.post("/{namespace}/{name}/invoke/stream")
+async def invoke_agent_stream(namespace: str, name: str, body: InvokeIn) -> StreamingResponse:
+    async def sse() -> AsyncIterator[str]:
+        async for event in kagent_client.stream_agent(namespace, name, body.text, body.session_id):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        sse(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
