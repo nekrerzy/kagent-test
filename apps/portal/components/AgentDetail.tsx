@@ -117,8 +117,8 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {agent.skills.map((s) => (
-              <li key={`${s.url}::${s.path ?? ""}`}>
-                <span className="font-medium">{s.name || s.url}</span>
+              <li key={s.image ? `img::${s.image}` : `${s.url}::${s.path ?? ""}`}>
+                <span className="font-medium">{s.name || s.url || s.image}</span>
                 {s.path && <span style={{ color: "var(--muted)" }}> · {s.path}</span>}
                 {s.ref && <span style={{ color: "var(--muted)" }}> @ {s.ref}</span>}
               </li>

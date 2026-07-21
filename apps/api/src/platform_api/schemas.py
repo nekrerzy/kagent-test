@@ -57,12 +57,20 @@ class ToolRef(BaseModel):
 
 
 class SkillGitRef(BaseModel):
-    """A git-hosted skill folder attached to an agent (kagent skills.gitRefs)."""
+    """A skill attached to an agent: either a git folder (kagent skills.gitRefs)
+    or an OCI image built from an uploaded zip (kagent skills.refs)."""
 
-    url: str
+    url: str | None = None
+    image: str | None = None
     name: str | None = None
     path: str | None = None
     ref: str | None = None
+
+    @model_validator(mode="after")
+    def _one_source(self) -> "SkillGitRef":
+        if bool(self.url) == bool(self.image):
+            raise ValueError("exactly one of url (git) or image (OCI) is required")
+        return self
 
 
 class AgentIn(BaseModel):
@@ -110,16 +118,24 @@ class DiscoveredTool(BaseModel):
 
 
 class SkillIn(BaseModel):
-    """Catalog entry for a reusable skill: a folder (SKILL.md + resources) in a
-    git repo, attachable to agents via kagent's skills.gitRefs."""
+    """Catalog entry for a reusable skill: a folder (SKILL.md + resources)
+    either in a git repo (url/path/ref) or packaged as an OCI image from an
+    uploaded zip (image)."""
 
     name: K8sName
     namespace: str | None = None
-    url: str
+    url: str | None = None
+    image: str | None = None
     path: str | None = None
     ref: str | None = None
     description: str | None = None
     tags: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _one_source(self) -> "SkillIn":
+        if bool(self.url) == bool(self.image):
+            raise ValueError("exactly one of url (git) or image (OCI) is required")
+        return self
 
 
 class SkillOut(SkillIn):

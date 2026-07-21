@@ -49,7 +49,8 @@ export interface ToolRef {
 export type AgentType = "Declarative" | "BYO";
 
 export interface SkillRef {
-  url: string;
+  url?: string | null;
+  image?: string | null;
   name?: string | null;
   path?: string | null;
   ref?: string | null;
@@ -113,7 +114,8 @@ export interface ModelConfigOut {
 export interface SkillIn {
   name: string;
   namespace?: string | null;
-  url: string;
+  url?: string | null;
+  image?: string | null;
   path?: string | null;
   ref?: string | null;
   description?: string | null;
@@ -394,6 +396,39 @@ export function listSkills(): Promise<SkillOut[]> {
 
 export function getSkill(ns: string, name: string): Promise<SkillOut> {
   return request<SkillOut>(`/v1/skills/${ns}/${name}`);
+}
+
+export async function uploadSkill(
+  name: string,
+  file: File,
+  description?: string,
+  tags?: string[],
+): Promise<SkillOut> {
+  const form = new FormData();
+  form.set("name", name);
+  form.set("file", file);
+  if (description) form.set("description", description);
+  if (tags?.length) form.set("tags", tags.join(","));
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/v1/skills/upload`, { method: "POST", body: form });
+  } catch {
+    throw new ApiError(
+      `Could not reach the platform API at ${API_BASE}. Is it running?`,
+      0,
+    );
+  }
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      if (typeof body.detail === "string") detail = body.detail;
+    } catch {
+      // non-JSON error body
+    }
+    throw new ApiError(detail, res.status);
+  }
+  return (await res.json()) as SkillOut;
 }
 
 export function createSkill(input: SkillIn): Promise<SkillOut> {

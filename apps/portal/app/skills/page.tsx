@@ -8,6 +8,7 @@ import {
   deleteSkill,
   listSkills,
   slugifyName,
+  uploadSkill,
 } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { useToast } from "@/components/Toast";
@@ -27,6 +28,32 @@ export default function SkillsPage() {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const [zipName, setZipName] = useState("");
+  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [zipDescription, setZipDescription] = useState("");
+  const [zipTags, setZipTags] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!zipFile) return;
+    setUploading(true);
+    try {
+      await uploadSkill(zipName, zipFile, zipDescription || undefined, zipTags);
+      setZipName("");
+      setZipFile(null);
+      setZipDescription("");
+      setZipTags([]);
+      const fileInput = document.getElementById("zip-file") as HTMLInputElement | null;
+      if (fileInput) fileInput.value = "";
+      refetch();
+    } catch (err) {
+      showError(err instanceof ApiError ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +99,7 @@ export default function SkillsPage() {
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
                   <th className="px-3 py-2 font-medium">Name</th>
-                  <th className="px-3 py-2 font-medium">Git URL</th>
+                  <th className="px-3 py-2 font-medium">Source</th>
                   <th className="px-3 py-2 font-medium">Path</th>
                   <th className="px-3 py-2 font-medium">Ref</th>
                   <th className="px-3 py-2 font-medium">Description</th>
@@ -88,7 +115,14 @@ export default function SkillsPage() {
                     style={{ borderColor: "var(--border)" }}
                   >
                     <td className="px-3 py-2">{skill.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{skill.url}</td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      {skill.url ?? skill.image}
+                      {skill.image && (
+                        <span className="ml-1" style={{ color: "var(--muted)" }}>
+                          (uploaded)
+                        </span>
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-xs" style={{ color: "var(--muted)" }}>
                       {skill.path ?? "—"}
                     </td>
@@ -130,7 +164,63 @@ export default function SkillsPage() {
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold">New skill</h2>
+        <h2 className="mb-4 text-lg font-semibold">Upload skill (zip)</h2>
+        <p className="mb-3 max-w-2xl text-sm" style={{ color: "var(--muted)" }}>
+          Zip a skill folder — a SKILL.md at the top plus any scripts and
+          resources, subfolders included — and upload it. It is stored as an
+          image in the platform registry; no git repo needed.
+        </p>
+        <form onSubmit={handleUpload} className="flex max-w-2xl flex-col gap-5">
+          <div>
+            <label className="field-label" htmlFor="zip-name">
+              Name
+            </label>
+            <input
+              id="zip-name"
+              required
+              value={zipName}
+              onChange={(e) => setZipName(slugifyName(e.target.value))}
+              className="field-input"
+            />
+          </div>
+          <div>
+            <label className="field-label" htmlFor="zip-file">
+              Zip file
+            </label>
+            <input
+              id="zip-file"
+              type="file"
+              required
+              accept=".zip,application/zip"
+              onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
+              className="field-input"
+            />
+          </div>
+          <div>
+            <label className="field-label" htmlFor="zip-description">
+              Description
+            </label>
+            <input
+              id="zip-description"
+              value={zipDescription}
+              onChange={(e) => setZipDescription(e.target.value)}
+              className="field-input"
+            />
+          </div>
+          <div>
+            <label className="field-label">Tags</label>
+            <TagsInput value={zipTags} onChange={setZipTags} />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="btn-primary" disabled={uploading || !zipFile}>
+              {uploading ? "Uploading…" : "Upload skill"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <h2 className="mb-4 text-lg font-semibold">New skill from git</h2>
         <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-5">
           <div>
             <label className="field-label" htmlFor="name">

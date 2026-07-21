@@ -107,17 +107,27 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
             "privileged": False,
             "allowPrivilegeEscalation": False,
         }
-        spec["skills"] = {
-            "gitRefs": [
-                {
-                    "url": s.url,
-                    **({"name": s.name} if s.name else {}),
-                    **({"path": s.path} if s.path else {}),
-                    **({"ref": s.ref} if s.ref else {}),
-                }
-                for s in agent.skills
-            ]
-        }
+        git_refs = [
+            {
+                "url": s.url,
+                **({"name": s.name} if s.name else {}),
+                **({"path": s.path} if s.path else {}),
+                **({"ref": s.ref} if s.ref else {}),
+            }
+            for s in agent.skills
+            if s.url
+        ]
+        image_refs = [s.image for s in agent.skills if s.image]
+        skills_spec: dict[str, Any] = {}
+        if git_refs:
+            skills_spec["gitRefs"] = git_refs
+        if image_refs:
+            skills_spec["refs"] = image_refs
+            # Uploaded skill images live in the plain-HTTP homelab registry;
+            # skills-init pulls in-pod where the Talos registry mirror does
+            # not apply, so HTTP must be allowed explicitly.
+            skills_spec["insecureSkipVerify"] = True
+        spec["skills"] = skills_spec
     if agent.description:
         spec["description"] = agent.description
 
@@ -152,6 +162,7 @@ def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
         if tool.get("type") == "McpServer" and tool.get("mcpServer")
     ]
 
+    skills_spec = spec.get("skills") or {}
     skills = [
         SkillGitRef(
             url=ref.get("url", ""),
@@ -159,8 +170,8 @@ def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
             path=ref.get("path"),
             ref=ref.get("ref"),
         )
-        for ref in (spec.get("skills") or {}).get("gitRefs") or []
-    ]
+        for ref in skills_spec.get("gitRefs") or []
+    ] + [SkillGitRef(image=image) for image in skills_spec.get("refs") or []]
 
     agent_type = spec.get("type", "Declarative")
     return AgentOut(
@@ -277,7 +288,11 @@ SKILL_LABEL = "platform.kagent.dev/skill"
 
 
 def skill_to_configmap(skill: SkillIn, namespace: str) -> dict[str, Any]:
-    data = {"url": skill.url}
+    data: dict[str, str] = {}
+    if skill.url:
+        data["url"] = skill.url
+    if skill.image:
+        data["image"] = skill.image
     if skill.path:
         data["path"] = skill.path
     if skill.ref:
@@ -309,7 +324,8 @@ def skill_from_configmap(obj: dict[str, Any]) -> SkillOut:
     return SkillOut(
         name=name,
         namespace=metadata.get("namespace", ""),
-        url=data.get("url", ""),
+        url=data.get("url") or None,
+        image=data.get("image") or None,
         path=data.get("path"),
         ref=data.get("ref"),
         description=data.get("description"),

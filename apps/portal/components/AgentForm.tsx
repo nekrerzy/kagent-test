@@ -26,9 +26,10 @@ interface AgentFormProps {
   initial?: AgentOut;
 }
 
-// Key skills by url+path so we can match a selected catalog skill against
-// the skill refs already stored on an agent (name/ref may differ or be unset).
-const skillKey = (url: string, path?: string | null) => `${url}::${path ?? ""}`;
+// Key skills by image (uploaded) or url+path (git) so a selected catalog
+// skill matches the refs already stored on an agent.
+const skillKey = (s: { url?: string | null; image?: string | null; path?: string | null }) =>
+  s.image ? `img::${s.image}` : `${s.url ?? ""}::${s.path ?? ""}`;
 
 export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
   const router = useRouter();
@@ -94,13 +95,13 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
   const [selectedSkillKeys, setSelectedSkillKeys] = useState<Set<string>>(() => {
     const seed = new Set<string>();
     for (const s of initial?.skills ?? []) {
-      seed.add(skillKey(s.url, s.path));
+      seed.add(skillKey(s));
     }
     return seed;
   });
 
-  const toggleSkill = (url: string, path?: string | null) => {
-    const key = skillKey(url, path);
+  const toggleSkill = (skill: { url?: string | null; image?: string | null; path?: string | null }) => {
+    const key = skillKey(skill);
     setSelectedSkillKeys((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -116,7 +117,7 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
     const existing = initial?.skills ?? [];
     if (!skills) return existing;
     return existing.filter(
-      (s) => !skills.some((cs) => skillKey(cs.url, cs.path) === skillKey(s.url, s.path)),
+      (s) => !skills.some((cs) => skillKey(cs) === skillKey(s)),
     );
   }, [skills, initial]);
 
@@ -141,13 +142,17 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
           : [];
 
       const matchedSkills: SkillRef[] = (skills ?? [])
-        .filter((s) => selectedSkillKeys.has(skillKey(s.url, s.path)))
-        .map((s) => ({
-          url: s.url,
-          name: s.name,
-          path: s.path || undefined,
-          ref: s.ref || undefined,
-        }));
+        .filter((s) => selectedSkillKeys.has(skillKey(s)))
+        .map((s) =>
+          s.image
+            ? { image: s.image, name: s.name }
+            : {
+                url: s.url,
+                name: s.name,
+                path: s.path || undefined,
+                ref: s.ref || undefined,
+              },
+        );
 
       const input: AgentIn = {
         name,
@@ -338,8 +343,8 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
                 <input
                   type="checkbox"
                   className="mt-1"
-                  checked={selectedSkillKeys.has(skillKey(skill.url, skill.path))}
-                  onChange={() => toggleSkill(skill.url, skill.path)}
+                  checked={selectedSkillKeys.has(skillKey(skill))}
+                  onChange={() => toggleSkill(skill)}
                 />
                 <span>
                   <span className="font-medium">{skill.name}</span>
@@ -354,7 +359,7 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
         {unmatchedSkills.length > 0 && (
           <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
             Also attached ({unmatchedSkills.length} not in the skills catalog, kept as-is):{" "}
-            {unmatchedSkills.map((s) => s.name || s.url).join(", ")}
+            {unmatchedSkills.map((s) => s.name || s.url || s.image).join(", ")}
           </p>
         )}
       </div>

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     gateway_name: str = "platform-gw"
     gateway_external_base: str = "http://10.20.0.101"
 
+    # Plain-HTTP registry that uploaded skill zips are pushed to as OCI images.
+    skills_registry: str = "10.20.0.1:5050"
+
 
 @lru_cache
 def get_settings() -> Settings:
