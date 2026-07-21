@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 
@@ -16,6 +17,16 @@ def create_app() -> FastAPI:
         title="Agents Platform API",
         version="0.1.0",
         description="Management and discovery surface over a kagent-backed Kubernetes cluster.",
+    )
+
+    # The portal runs on a different origin (portal.* vs api.*); without CORS
+    # the browser blocks every response. Wide-open is deliberate for the
+    # unauthenticated LAN-only MVP — revisit with Phase 5 auth.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(agents.router)
