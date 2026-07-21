@@ -131,7 +131,7 @@ Consumes only the platform API. Pages:
 
 **Exit criteria:** a non-developer can create an agent, attach tools, and chat with it entirely from the portal.
 
-### Phase 3 — agentgateway integration (governed exposure + federation) — **DONE 2026-07-21** except observability (see docs/phase-3.md; OTel/Jaeger still pending)
+### Phase 3 — agentgateway integration (governed exposure + federation) — **DONE 2026-07-21** incl. observability (docs/phase-3.md; Jaeger at jaeger.10.20.0.100.sslip.io, agent + gateway traces)
 1. **LLM egress through the gateway**: point kagent `ModelConfig.baseUrl` at the agentgateway LLM route → cost/token attribution, failover, guardrails hooks.
 2. **A2A exposure**: when an agent is created via the platform, the API also reconciles `AgentgatewayBackend` + `HTTPRoute` (agent Service marked `appProtocol: kgateway.dev/a2a`) so it's reachable at a stable external A2A URL. Deleting the agent garbage-collects the routes.
 3. **Virtual MCP endpoint**: all registered MCP servers federated behind one multiplexed MCP URL (namespaced tools) — the platform's headline "one endpoint to consume the whole catalog" feature.
@@ -140,7 +140,7 @@ Consumes only the platform API. Pages:
 
 **Exit criteria:** external client can call any published agent (A2A) and the federated MCP endpoint through the agentgateway IP; portal shows per-agent cost/tokens (from gateway telemetry) or links to traces.
 
-### Phase 4 — BYO agents + Skills catalog
+### Phase 4 — BYO agents + Skills catalog — **DONE 2026-07-21** (BYO type + image via portal/API, skills as labeled ConfigMaps + gitRefs; note: kagent defaults skills-bearing agents to privileged — the API overrides with a non-privileged securityContext for baseline PSA)
 1. **BYO agents**: platform API/portal accept `type: BYO` — container image + port → `Agent` CRD `byo.deployment.image`. Ship `examples/` for LangGraph and CrewAI (using kagent's checkpointer/memory endpoints). Contract validation: platform checks the AgentCard endpoint after deploy and surfaces status.
 2. **Skills** (decided: **git-link**, no OCI registry needed): a skill is a folder (`SKILL.md` + scripts/resources) in a git repo; platform `skills` resource: `GET/POST/... /v1/skills` registers a git ref (repo URL + path + revision) with catalog metadata; portal Skills catalog; agent builder gains "attach skills" (→ `Agent.spec.skills.gitRefs`).
 3. CLI-friendliness: document `curl`/`httpie` flows; optionally a tiny `platformctl` later — not in scope now.
