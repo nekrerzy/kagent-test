@@ -78,8 +78,9 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
         tools.append({"type": "McpServer", "mcpServer": mcp_server})
 
     declarative: dict[str, Any] = {"systemMessage": agent.system_message}
-    if agent.model_config_ref:
-        declarative["modelConfig"] = agent.model_config_ref
+    # kagent's controller does not fall back to its default when modelConfig is
+    # omitted — it fails with `ModelConfig "" not found` — so default it here.
+    declarative["modelConfig"] = agent.model_config_ref or "default-model-config"
     if tools:
         declarative["tools"] = tools
 
