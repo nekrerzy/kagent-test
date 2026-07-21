@@ -22,9 +22,7 @@ def test_extract_root_skill_md():
 
 
 def test_extract_strips_single_top_dir():
-    files = _extract_skill_zip(
-        _zip({"my-skill/SKILL.md": b"# s", "my-skill/data/a.txt": b"x"})
-    )
+    files = _extract_skill_zip(_zip({"my-skill/SKILL.md": b"# s", "my-skill/data/a.txt": b"x"}))
     assert set(files) == {"SKILL.md", "data/a.txt"}
 
 

@@ -54,6 +54,9 @@ ModelProvider = Literal[
 class ToolRef(BaseModel):
     mcp_server: str
     tool_names: list[str] | None = None
+    # Tools requiring human approval before execution ("ask" scope).
+    # Every entry must also be in tool_names; enforced by kagent's CRD.
+    require_approval: list[str] | None = None
 
 
 class SkillGitRef(BaseModel):
@@ -101,6 +104,10 @@ class AgentIn(BaseModel):
 class AgentOut(AgentIn):
     ready: bool | None = None
     a2a_url: str | None = None
+    # metadata.generation — bumps on every spec change; honest lightweight versioning
+    version: int | None = None
+    # Session count from kagent (best-effort; None when unavailable)
+    runs: int | None = None
 
 
 class McpServerIn(BaseModel):
@@ -109,6 +116,10 @@ class McpServerIn(BaseModel):
     description: str | None = None
     url: str
     protocol: Protocol = "STREAMABLE_HTTP"
+    # Optional auth header sent to the MCP server (e.g. Authorization).
+    # auth_value is write-only: stored in a Secret, never returned.
+    auth_header: str | None = None
+    auth_value: str | None = None
     tags: list[str] = Field(default_factory=list)
 
 
@@ -142,9 +153,33 @@ class SkillOut(SkillIn):
     pass
 
 
+class SkillAuthorIn(BaseModel):
+    """Author a skill directly in the portal: SKILL.md content, packaged and
+    pushed exactly like an uploaded zip."""
+
+    name: K8sName
+    namespace: str | None = None
+    skill_md: str
+    description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
+class SkillContentOut(BaseModel):
+    skill_md: str
+    files: list[str]
+    versions: list[str] = Field(default_factory=list)
+
+
+class EnvironmentOut(BaseModel):
+    name: str
+    default: bool = False
+
+
 class McpProbeIn(BaseModel):
     url: str
     protocol: Protocol = "STREAMABLE_HTTP"
+    auth_header: str | None = None
+    auth_value: str | None = None
 
 
 class McpProbeOut(BaseModel):
@@ -156,6 +191,11 @@ class McpProbeOut(BaseModel):
 class McpServerOut(McpServerIn):
     ready: bool | None = None
     discovered_tools: list[DiscoveredTool] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _never_echo_auth_value(self) -> "McpServerOut":
+        self.auth_value = None
+        return self
 
 
 class ModelConfigIn(BaseModel):

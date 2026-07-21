@@ -39,7 +39,7 @@ def test_update_and_delete_mcp_server(client):
 
 
 def test_create_rejects_unreachable_mcp_server(client, monkeypatch):
-    async def failing_probe(url: str, protocol: str) -> dict:
+    async def failing_probe(url: str, protocol: str, headers=None) -> dict:
         return {"reachable": False, "tools": [], "error": "connection refused"}
 
     monkeypatch.setattr("platform_api.routers.mcp_servers.probe_mcp", failing_probe)
@@ -55,7 +55,7 @@ def test_create_rejects_unreachable_mcp_server(client, monkeypatch):
 
 
 def test_validate_endpoint_reports_probe_result(client, monkeypatch):
-    async def probe(url: str, protocol: str) -> dict:
+    async def probe(url: str, protocol: str, headers=None) -> dict:
         return {
             "reachable": True,
             "tools": [{"name": "echo", "description": "Echoes"}],

@@ -20,15 +20,31 @@ K8sDep = Annotated[K8sClient, Depends(get_k8s_client)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
+async def _run_counts() -> dict[tuple[str, str], int]:
+    """Session counts per (namespace, agent) from kagent — best-effort."""
+    counts: dict[tuple[str, str], int] = {}
+    try:
+        for session in await kagent_client.list_sessions():
+            key = kagent_client.session_agent_key(session)
+            counts[key] = counts.get(key, 0) + 1
+    except Exception:
+        logger.debug("kagent sessions unavailable; runs omitted")
+    return counts
+
+
 @router.get("", response_model=list[AgentOut])
-def list_agents(
+async def list_agents(
     k8s: K8sDep, settings: SettingsDep, namespace: str | None = Query(default=None)
 ) -> list[AgentOut]:
     ns = namespace or settings.default_namespace
-    return [
+    counts = await _run_counts()
+    agents = [
         mappers.agent_from_crd(obj, settings.gateway_external_base)
         for obj in k8s.list(PLURAL_AGENTS, ns)
     ]
+    for agent in agents:
+        agent.runs = counts.get((agent.namespace, agent.name))
+    return agents
 
 
 @router.post("", response_model=AgentOut, status_code=201)

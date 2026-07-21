@@ -237,3 +237,26 @@ def _parse_result(result: dict[str, Any]) -> dict[str, Any]:
         "context_id": result.get("contextId"),
         "raw": result,
     }
+
+
+async def list_sessions(*, client: httpx.AsyncClient | None = None) -> list[dict[str, Any]]:
+    """All kagent sessions. agent_id format: `<ns>__NS__<agent_name_with_underscores>`."""
+    http_client, owns_client = _client_for("", client)
+    try:
+        resp = await http_client.get("/api/sessions", headers={"X-User-Id": "admin@kagent.dev"})
+        if resp.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"kagent sessions: HTTP {resp.status_code}")
+        return resp.json().get("data") or []
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"kagent request failed: {exc}") from exc
+    finally:
+        if owns_client:
+            await http_client.aclose()
+
+
+def session_agent_key(session: dict[str, Any]) -> tuple[str, str]:
+    """(namespace, agent-name) from a session's agent_id, mapping kagent's
+    underscore encoding back to the CRD name (dashes)."""
+    raw = session.get("agent_id") or ""
+    ns, _, name = raw.partition("__NS__")
+    return ns, name.replace("_", "-")

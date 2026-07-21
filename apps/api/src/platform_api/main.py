@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from platform_api.config import Settings, get_settings
 from platform_api.k8s import K8sClient, PLURAL_AGENTS, get_k8s_client
-from platform_api.routers import agents, catalog, mcp_servers, model_configs, skills
+from platform_api.routers import agents, catalog, environments, mcp_servers, model_configs, skills
 
 
 def create_app() -> FastAPI:
@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
     app.include_router(model_configs.router)
     app.include_router(catalog.router)
     app.include_router(skills.router)
+    app.include_router(environments.router)
 
     @app.get("/healthz")
     def healthz(

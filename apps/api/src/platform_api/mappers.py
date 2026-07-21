@@ -46,6 +46,10 @@ def model_config_secret_name(name: str) -> str:
     return f"{name}-apikey"
 
 
+def mcp_auth_secret_name(name: str) -> str:
+    return f"{name}-mcp-auth"
+
+
 def _tags_from_annotations(annotations: dict[str, str] | None) -> list[str]:
     if not annotations:
         return []
@@ -85,6 +89,8 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
             }
             if tool.tool_names:
                 mcp_server["toolNames"] = tool.tool_names
+            if tool.require_approval:
+                mcp_server["requireApproval"] = tool.require_approval
             tools.append({"type": "McpServer", "mcpServer": mcp_server})
 
         declarative: dict[str, Any] = {"systemMessage": agent.system_message}
@@ -100,9 +106,9 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
         # attached, which baseline PSA rejects (pods never schedule). An
         # explicit non-privileged securityContext is honored and skills still
         # load/execute as the container user.
-        deployment = spec.setdefault("byo" if agent.type == "BYO" else "declarative", {}).setdefault(
-            "deployment", {}
-        )
+        deployment = spec.setdefault(
+            "byo" if agent.type == "BYO" else "declarative", {}
+        ).setdefault("deployment", {})
         deployment["securityContext"] = {
             "privileged": False,
             "allowPrivilegeEscalation": False,
@@ -157,6 +163,7 @@ def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
         ToolRef(
             mcp_server=(tool.get("mcpServer") or {}).get("name", ""),
             tool_names=(tool.get("mcpServer") or {}).get("toolNames") or None,
+            require_approval=(tool.get("mcpServer") or {}).get("requireApproval") or None,
         )
         for tool in declarative.get("tools") or []
         if tool.get("type") == "McpServer" and tool.get("mcpServer")
@@ -187,6 +194,7 @@ def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
         tags=_tags_from_annotations(metadata.get("annotations")),
         ready=_condition_true(status, "Ready"),
         a2a_url=f"{a2a_base}/a2a/{namespace}/{name}",
+        version=metadata.get("generation"),
     )
 
 
@@ -201,15 +209,28 @@ def mcp_server_to_crd(mcp: McpServerIn, namespace: str) -> dict[str, Any]:
     if annotations:
         metadata["annotations"] = annotations
 
+    spec: dict[str, Any] = {
+        "description": mcp.description or "",
+        "protocol": mcp.protocol,
+        "url": mcp.url,
+    }
+    if mcp.auth_header:
+        spec["headersFrom"] = [
+            {
+                "name": mcp.auth_header,
+                "valueFrom": {
+                    "type": "Secret",
+                    "name": mcp_auth_secret_name(mcp.name),
+                    "key": "value",
+                },
+            }
+        ]
+
     return {
         "apiVersion": API_VERSION,
         "kind": "RemoteMCPServer",
         "metadata": metadata,
-        "spec": {
-            "description": mcp.description or "",
-            "protocol": mcp.protocol,
-            "url": mcp.url,
-        },
+        "spec": spec,
     }
 
 
@@ -223,10 +244,12 @@ def mcp_server_from_crd(obj: dict[str, Any]) -> McpServerOut:
         for tool in status.get("discoveredTools") or []
     ]
 
+    headers = spec.get("headersFrom") or []
     return McpServerOut(
         name=metadata.get("name", ""),
         namespace=metadata.get("namespace", ""),
         description=spec.get("description"),
+        auth_header=headers[0].get("name") if headers else None,
         url=spec.get("url", ""),
         protocol=spec.get("protocol", "STREAMABLE_HTTP"),
         tags=_tags_from_annotations(metadata.get("annotations")),

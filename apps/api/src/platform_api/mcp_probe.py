@@ -17,14 +17,16 @@ from mcp.client.streamable_http import streamablehttp_client
 PROBE_TIMEOUT_SECONDS = 8.0
 
 
-async def probe_mcp(url: str, protocol: str) -> dict[str, Any]:
+async def probe_mcp(
+    url: str, protocol: str, headers: dict[str, str] | None = None
+) -> dict[str, Any]:
     """Returns {"reachable": bool, "tools": [{name, description}], "error": str | None}."""
     try:
         async with asyncio.timeout(PROBE_TIMEOUT_SECONDS):
             if protocol == "SSE":
-                client_ctx = sse_client(url)
+                client_ctx = sse_client(url, headers=headers)
             else:
-                client_ctx = streamablehttp_client(url)
+                client_ctx = streamablehttp_client(url, headers=headers)
             async with client_ctx as streams:
                 read_stream, write_stream = streams[0], streams[1]
                 async with ClientSession(read_stream, write_stream) as session:

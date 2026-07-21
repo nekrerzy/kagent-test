@@ -184,9 +184,7 @@ class K8sClient:
     def list_configmaps(self, namespace: str, label_selector: str) -> list[dict[str, Any]]:
         self._require_config()
         try:
-            result = self._core.list_namespaced_config_map(
-                namespace, label_selector=label_selector
-            )
+            result = self._core.list_namespaced_config_map(namespace, label_selector=label_selector)
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
         return [self._core.api_client.sanitize_for_serialization(cm) for cm in result.items]
@@ -219,6 +217,53 @@ class K8sClient:
             self._core.delete_namespaced_config_map(name, namespace)
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
+
+    def list_namespaces(self, label_selector: str) -> list[str]:
+        self._require_config()
+        try:
+            result = self._core.list_namespace(label_selector=label_selector)
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+        return [ns.metadata.name for ns in result.items]
+
+    def create_namespace(self, name: str, labels: dict[str, str]) -> None:
+        self._require_config()
+        body = client.V1Namespace(metadata=client.V1ObjectMeta(name=name, labels=labels))
+        try:
+            self._core.create_namespace(body)
+        except ApiException as exc:
+            if exc.status == 409:
+                return
+            raise _map_api_exception(exc) from exc
+
+    def get_secret(self, namespace: str, name: str) -> dict[str, Any]:
+        self._require_config()
+        try:
+            secret = self._core.read_namespaced_secret(name, namespace)
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+        return self._core.api_client.sanitize_for_serialization(secret)
+
+    def put_secret_raw(self, namespace: str, body: dict[str, Any]) -> None:
+        """Create-or-replace a Secret from a full dict (base64 `data` preserved)."""
+        self._require_config()
+        name = body["metadata"]["name"]
+        clean = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": name, "namespace": namespace},
+            "type": body.get("type", "Opaque"),
+            "data": body.get("data") or {},
+        }
+        try:
+            self._core.create_namespaced_secret(namespace, clean)
+        except ApiException as exc:
+            if exc.status != 409:
+                raise _map_api_exception(exc) from exc
+            try:
+                self._core.replace_namespaced_secret(name, namespace, clean)
+            except ApiException as exc2:
+                raise _map_api_exception(exc2) from exc2
 
     def put_secret(self, namespace: str, name: str, string_data: dict[str, str]) -> None:
         """Create the Secret, or replace it in place if it already exists."""

@@ -7,36 +7,34 @@ metadata:
   name: platform-api
   namespace: platform
 ---
-# RBAC lives in the kagent namespace: the API manages catalog CRDs there and
-# creates Secrets for model API keys. Deliberately namespace-scoped (not
-# cluster-wide) — all catalog objects live in the kagent namespace for MVP.
+# Cluster-scoped RBAC: environments are namespaces (created and seeded by the
+# API), so catalog CRDs, Secrets and skill ConfigMaps are managed across all
+# environment namespaces, not just kagent.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: platform-api
-  namespace: kagent
 rules:
   - apiGroups: ["kagent.dev"]
     resources: ["agents", "modelconfigs", "remotemcpservers"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["secrets"]
-    # update: put_secret replaces an existing Secret when a model config's API
-    # key is re-submitted; without it re-creates 403.
     verbs: ["get", "create", "update", "delete"]
   - apiGroups: [""]
-    # Skills catalog entries are stored as labeled ConfigMaps.
     resources: ["configmaps"]
     verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: platform-api
-  namespace: kagent
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: platform-api
 subjects:
   - kind: ServiceAccount

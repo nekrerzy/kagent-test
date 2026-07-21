@@ -22,6 +22,7 @@ class FakeK8sClient:
         # K8sClient's generic methods address them.
         self.objects: dict[tuple[str, str, str, str], dict[str, Any]] = {}
         self.configmaps: dict[tuple[str, str], dict[str, Any]] = {}
+        self.namespaces: dict[str, dict[str, str]] = {}
         self._resource_version = 0
 
     def list_objects(
@@ -113,6 +114,26 @@ class FakeK8sClient:
         self.configmaps[(namespace, body["metadata"]["name"])] = copy.deepcopy(body)
         return copy.deepcopy(body)
 
+    def list_namespaces(self, label_selector: str) -> list[str]:
+        key, _, value = label_selector.partition("=")
+        return sorted(ns for ns, labels in self.namespaces.items() if labels.get(key) == value)
+
+    def create_namespace(self, name: str, labels: dict[str, str]) -> None:
+        self.namespaces[name] = labels
+
+    def get_secret(self, namespace: str, name: str) -> dict[str, Any]:
+        if (namespace, name) not in self.secrets:
+            raise HTTPException(status_code=404, detail="resource not found")
+        return {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": name, "namespace": namespace},
+            "data": dict(self.secrets[(namespace, name)]),
+        }
+
+    def put_secret_raw(self, namespace: str, body: dict[str, Any]) -> None:
+        self.secrets[(namespace, body["metadata"]["name"])] = dict(body.get("data") or {})
+
     def delete_configmap(self, namespace: str, name: str) -> None:
         if (namespace, name) not in self.configmaps:
             raise HTTPException(status_code=404, detail="resource not found")
@@ -128,7 +149,7 @@ def fake_k8s() -> FakeK8sClient:
 def reachable_mcp_probe(monkeypatch: pytest.MonkeyPatch):
     """MCP registration probes succeed by default; tests override per-case."""
 
-    async def fake_probe(url: str, protocol: str) -> dict:
+    async def fake_probe(url: str, protocol: str, headers=None) -> dict:
         return {"reachable": True, "tools": [], "error": None}
 
     monkeypatch.setattr("platform_api.routers.mcp_servers.probe_mcp", fake_probe)

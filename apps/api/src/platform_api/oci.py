@@ -100,3 +100,31 @@ def push_image(registry: str, repository: str, tag: str, files: dict[str, bytes]
         ).raise_for_status()
 
     return f"{registry}/{repository}:{tag}"
+
+
+def list_tags(registry: str, repository: str) -> list[str]:
+    with httpx.Client(timeout=30.0) as client:
+        resp = client.get(f"http://{registry}/v2/{repository}/tags/list")
+        if resp.status_code == 404:
+            return []
+        resp.raise_for_status()
+        return resp.json().get("tags") or []
+
+
+def fetch_files(registry: str, repository: str, tag: str) -> dict[str, bytes]:
+    """Pull the single-layer image back and return {path: content}."""
+    base = f"http://{registry}/v2/{repository}"
+    with httpx.Client(timeout=60.0) as client:
+        manifest = client.get(f"{base}/manifests/{tag}", headers={"Accept": MANIFEST_TYPE})
+        manifest.raise_for_status()
+        layers = manifest.json().get("layers") or []
+        if not layers:
+            return {}
+        blob = client.get(f"{base}/blobs/{layers[0]['digest']}")
+        blob.raise_for_status()
+    tar = tarfile.open(fileobj=io.BytesIO(gzip.decompress(blob.content)))
+    return {
+        member.name: tar.extractfile(member).read()
+        for member in tar.getmembers()
+        if member.isfile()
+    }

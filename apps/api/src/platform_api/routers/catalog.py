@@ -42,7 +42,7 @@ def _model_config_matches(q: str, mc: ModelConfigOut) -> bool:
 
 
 @router.get("", response_model=CatalogOut)
-def get_catalog(
+async def get_catalog(
     k8s: K8sDep,
     settings: SettingsDep,
     q: str | None = Query(default=None),
@@ -54,6 +54,14 @@ def get_catalog(
         mappers.agent_from_crd(obj, settings.gateway_external_base)
         for obj in k8s.list(PLURAL_AGENTS, ns)
     ]
+    try:
+        from platform_api.routers.agents import _run_counts
+
+        counts = await _run_counts()
+        for agent in agents:
+            agent.runs = counts.get((agent.namespace, agent.name))
+    except Exception:
+        pass
     mcp_servers = [
         mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)
     ]

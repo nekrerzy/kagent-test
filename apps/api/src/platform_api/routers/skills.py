@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from platform_api import mappers, oci
 from platform_api.config import Settings, get_settings
 from platform_api.k8s import K8sClient, get_k8s_client
-from platform_api.schemas import SkillIn, SkillOut
+from platform_api.schemas import SkillAuthorIn, SkillContentOut, SkillIn, SkillOut
 
 router = APIRouter(prefix="/v1/skills", tags=["skills"])
 
@@ -113,6 +113,53 @@ def create_skill(skill: SkillIn, k8s: K8sDep, settings: SettingsDep) -> SkillOut
     ns = skill.namespace or settings.default_namespace
     created = k8s.put_configmap(ns, mappers.skill_to_configmap(skill, ns))
     return mappers.skill_from_configmap(created)
+
+
+@router.post("/author", response_model=SkillOut, status_code=201)
+def author_skill(body: SkillAuthorIn, k8s: K8sDep, settings: SettingsDep) -> SkillOut:
+    """Create or update a skill from portal-authored SKILL.md content —
+    packaged and pushed exactly like an uploaded zip (content-hash version tag)."""
+    files = {"SKILL.md": body.skill_md.encode()}
+    tag = hashlib.sha256(body.skill_md.encode()).hexdigest()[:12]
+    skill = SkillIn(
+        name=body.name,
+        namespace=body.namespace,
+        image="pending",
+        description=body.description,
+        tags=body.tags,
+    )
+    try:
+        skill.image = oci.push_image(settings.skills_registry, f"skills/{skill.name}", tag, files)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"failed to push skill image: {exc}") from exc
+    ns = skill.namespace or settings.default_namespace
+    created = k8s.put_configmap(ns, mappers.skill_to_configmap(skill, ns))
+    return mappers.skill_from_configmap(created)
+
+
+@router.get("/{namespace}/{name}/content", response_model=SkillContentOut)
+def get_skill_content(
+    namespace: str, name: str, k8s: K8sDep, settings: SettingsDep
+) -> SkillContentOut:
+    skill = mappers.skill_from_configmap(k8s.get_configmap(namespace, f"skill-{name}"))
+    if not skill.image:
+        raise HTTPException(
+            status_code=422, detail="content is only available for uploaded/authored skills"
+        )
+    registry_repo, _, tag = skill.image.rpartition(":")
+    registry, _, repo = registry_repo.partition("/")
+    try:
+        files = oci.fetch_files(registry, repo, tag)
+        versions = oci.list_tags(registry, repo)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail=f"failed to fetch skill content: {exc}"
+        ) from exc
+    return SkillContentOut(
+        skill_md=files.get("SKILL.md", b"").decode(errors="replace"),
+        files=sorted(files),
+        versions=versions,
+    )
 
 
 @router.get("/{namespace}/{name}", response_model=SkillOut)

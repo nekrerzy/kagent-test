@@ -133,15 +133,24 @@ def reconcile_mcp_catalog(
     k8s: K8sClient, settings: Settings, servers: list[dict[str, Any]]
 ) -> None:
     """Mirror the given RemoteMCPServer CRDs into the catalog backend's targets."""
-    targets = [
-        mcp_target(
-            obj["metadata"]["name"],
-            (obj.get("spec") or {}).get("url", ""),
-            (obj.get("spec") or {}).get("protocol", "STREAMABLE_HTTP"),
+    targets = []
+    for obj in servers:
+        spec_obj = obj.get("spec") or {}
+        if not spec_obj.get("url"):
+            continue
+        meta = obj["metadata"]
+        ns_prefix = (
+            ""
+            if meta.get("namespace") == settings.default_namespace
+            else f"{meta.get('namespace')}-"
         )
-        for obj in servers
-        if (obj.get("spec") or {}).get("url")
-    ]
+        targets.append(
+            mcp_target(
+                f"{ns_prefix}{meta['name']}",
+                spec_obj.get("url", ""),
+                spec_obj.get("protocol", "STREAMABLE_HTTP"),
+            )
+        )
     ns = settings.gateway_namespace
     if targets:
         k8s.put_object(
