@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e7e2;font-family:system-ui,sans-serif}
+.dv-turn{padding:44px 48px 36px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 22px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:4px 9px;border-radius:5px;text-decoration:none;color:#fff}
+.dv-tname{font:600 14px/1.3 system-ui,sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.4 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:1080px}
+.dv-olabel b{font-weight:600;color:#1a1a1a}
+.dv-card{max-width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12);overflow:hidden}
+.dv-opt:target .dv-oid{background:#128c82;color:#fff}
+.dv-next{margin:26px 0 0;font:12px/1.6 system-ui,sans-serif;color:rgba(0,0,0,.5);max-width:820px}
+.dv-intro{padding:44px 48px 8px;max-width:900px}
+.dv-intro h1{font:700 26px/1.15 'Space Grotesk',system-ui,sans-serif;color:#17171a;margin:0 0 12px}
+.dv-intro p{font:400 14px/1.65 system-ui,sans-serif;color:#4a4a52;margin:0 0 10px}
+.dv-intro .k{font:500 12px ui-monospace,Menlo,monospace;background:#dcdad3;padding:1px 6px;border-radius:4px;color:#333}
+a{color:inherit}
+</style>
+</helmet>
+
+<div class="dv-intro">
+  <h1>Open Agents — chosen direction (3c) + Quick &amp; Pro</h1>
+  <p>One unified shell over the agentic primitives — <b>Agents</b>, <b>MCP Servers</b>, <b>Skills</b>, and now <b>Workflows</b> — with a single <span class="k">Quick ↔ Pro</span> toggle. Below: <b>Quick mode</b> (the exec/citizen — conversational, declarative) up top, then <b>Pro mode</b> (the developer — code, permissions, environments) underneath. Each mode is shown across three surfaces: <b>Home</b>, <b>Skills</b>, and <b>Workflow building</b>.</p>
+</div>
+
+<!-- ===================== QUICK MODE ===================== -->
+<section class="dv-turn" id="tq">
+  <div class="dv-thd"><span class="dv-tid" style="background:#128c82">QUICK</span><span class="dv-tname">Quick mode — the citizen experience (conversational &amp; declarative)</span></div>
+  <div class="dv-opts">
+
+    <!-- 3c QUICK HOME -->
+    <div class="dv-opt" id="3c">
+      <div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a><span><b>Home.</b> A single immersive Platform-Agent prompt owns the top; the primitives collapse into one segmented switcher (Agents · MCP · Skills) so the whole thing stays one calm screen.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:706px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)">Quick</span><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="padding:54px 40px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;background:radial-gradient(130% 100% at 50% -10%,#dff0ee 0%,#f8faf9 55%)">
+            <div style="display:flex;align-items:center;gap:7px;font:500 11px 'IBM Plex Mono';letter-spacing:.08em;color:#128c82;margin-bottom:16px"><span style="width:7px;height:7px;border-radius:50%;background:#128c82"></span>PLATFORM AGENT</div>
+            <div style="font:600 34px/1.12 'Space Grotesk';letter-spacing:-.02em;max-width:600px">Let's build your next agent.</div>
+            <div style="margin-top:26px;width:100%;max-width:660px;background:#fff;border:1px solid rgba(0,40,35,.14);border-radius:16px;box-shadow:0 8px 30px rgba(10,60,55,.1);padding:18px 18px 13px;text-align:left"><div style="font:400 15px 'IBM Plex Sans';color:#8ba09b">Describe what it should do, and who it's for…</div><div style="display:flex;align-items:center;gap:8px;margin-top:16px"><span style="font:400 12px 'IBM Plex Sans';color:#8ba09b;border:1px solid rgba(0,40,35,.12);border-radius:7px;padding:5px 9px">＋ Attach context</span><span style="font:400 12px 'IBM Plex Sans';color:#8ba09b;border:1px solid rgba(0,40,35,.12);border-radius:7px;padding:5px 9px">◇ Connect a tool</span><div style="flex:1"></div><div style="width:38px;height:38px;border-radius:11px;background:#128c82;display:flex;align-items:center;justify-content:center;color:#fff;font:600 17px">→</div></div></div>
+          </div>
+          <div style="flex:1;padding:4px 40px 32px;display:flex;flex-direction:column;gap:16px;min-height:0">
+            <div style="display:flex;align-items:center;gap:8px"><div style="display:flex;background:#eef3f2;border-radius:10px;padding:3px;gap:2px"><span style="font:600 12.5px 'IBM Plex Sans';padding:7px 16px;border-radius:7px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span>Agents <span style="font:400 11px 'IBM Plex Mono';color:#7d908c">12</span></span><span style="font:500 12.5px 'IBM Plex Sans';padding:7px 16px;border-radius:7px;color:#5f736f;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;background:#a9bbb7;transform:rotate(45deg)"></span>MCP <span style="font:400 11px 'IBM Plex Mono'">5</span></span><span style="font:500 12.5px 'IBM Plex Sans';padding:7px 16px;border-radius:7px;color:#5f736f;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:2px;background:#a9bbb7"></span>Skills <span style="font:400 11px 'IBM Plex Mono'">18</span></span></div><div style="flex:1"></div><span style="font:500 12px 'IBM Plex Sans';color:#128c82">View all →</span></div>
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;min-height:0">
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:8px"><span style="font:600 14px 'Space Grotesk'">Weekly Digest</span><span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#1fa85a"></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Monday email digest of team updates.</div><div style="display:flex;gap:6px"><span style="font:500 11px 'IBM Plex Mono';background:#e4f2f0;color:#0f7a71;border-radius:6px;padding:3px 8px">◇ Gmail</span><span style="font:500 11px 'IBM Plex Mono';background:#eef3f2;color:#5f736f;border-radius:6px;padding:3px 8px">▢ Sum.</span></div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:8px"><span style="font:600 14px 'Space Grotesk'">Support Triage</span><span style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#1fa85a"></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Tags and routes inbound tickets.</div><div style="display:flex;gap:6px"><span style="font:500 11px 'IBM Plex Mono';background:#e4f2f0;color:#0f7a71;border-radius:6px;padding:3px 8px">◇ Zendesk</span><span style="font:500 11px 'IBM Plex Mono';background:#eef3f2;color:#5f736f;border-radius:6px;padding:3px 8px">▢ Class.</span></div></div>
+              <div style="border:1.5px dashed rgba(18,140,130,.4);border-radius:13px;background:#f0f8f7;padding:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#0f7a71"><div style="font:600 20px 'Space Grotesk'">＋</div><div style="font:500 12px 'IBM Plex Sans'">New agent</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5a QUICK SKILLS -->
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span><b>Skills.</b> A friendly library: browse ready-made skills, toggle them into any agent as a block, or ask the Platform Agent to write a new one from a plain-language description.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:706px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)">Quick</span><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:26px 40px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:flex-end;gap:14px">
+              <div><div style="font:600 22px 'Space Grotesk';letter-spacing:-.015em">Skills</div><div style="font:400 12.5px 'IBM Plex Sans';color:#5f736f;margin-top:2px">Reusable abilities you can snap into any agent · 18 available</div></div>
+              <div style="flex:1"></div>
+              <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:500 12px 'IBM Plex Sans';padding:6px 13px;border-radius:6px;color:#5f736f">All</span><span style="font:600 12px 'IBM Plex Sans';padding:6px 13px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)">In use</span><span style="font:500 12px 'IBM Plex Sans';padding:6px 13px;border-radius:6px;color:#5f736f">Library</span></div>
+            </div>
+            <!-- author prompt -->
+            <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(0,40,35,.12);border-radius:14px;box-shadow:0 4px 18px rgba(10,60,55,.06);padding:13px 15px">
+              <span style="width:9px;height:9px;border-radius:50%;background:#128c82;flex:none"></span>
+              <span style="font:400 13.5px 'IBM Plex Sans';color:#8ba09b;flex:1">Need something new? Describe a skill — “extract action items from a meeting transcript” — and I'll write it.</span>
+              <div style="width:34px;height:34px;border-radius:10px;background:#128c82;display:flex;align-items:center;justify-content:center;color:#fff;font:600 15px;flex:none">→</div>
+            </div>
+            <!-- skills grid -->
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:min-content;gap:13px;overflow:hidden;align-content:start">
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:14px">▢</div><span style="font:600 14px 'Space Grotesk'">Summarize</span><span style="margin-left:auto;width:34px;height:19px;border-radius:11px;background:#128c82;position:relative"><span style="position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;right:2px"></span></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Condense long text into key points.</div><div style="font:400 10.5px 'IBM Plex Mono';color:#96a8a4">used by 7 agents</div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:14px">▢</div><span style="font:600 14px 'Space Grotesk'">Classify</span><span style="margin-left:auto;width:34px;height:19px;border-radius:11px;background:#128c82;position:relative"><span style="position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;right:2px"></span></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Sort items into labeled categories.</div><div style="font:400 10.5px 'IBM Plex Mono';color:#96a8a4">used by 3 agents</div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;font-size:14px">▢</div><span style="font:600 14px 'Space Grotesk'">Extract</span><span style="margin-left:auto;width:34px;height:19px;border-radius:11px;background:#d3ddda;position:relative"><span style="position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px"></span></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Pull structured fields from documents.</div><div style="font:400 10.5px 'IBM Plex Mono';color:#96a8a4">not in use</div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;font-size:14px">▢</div><span style="font:600 14px 'Space Grotesk'">Translate</span><span style="margin-left:auto;width:34px;height:19px;border-radius:11px;background:#d3ddda;position:relative"><span style="position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px"></span></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Convert text between languages.</div><div style="font:400 10.5px 'IBM Plex Mono';color:#96a8a4">not in use</div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:14px">▢</div><span style="font:600 14px 'Space Grotesk'">Digest Format</span><span style="margin-left:auto;width:34px;height:19px;border-radius:11px;background:#128c82;position:relative"><span style="position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;right:2px"></span></span></div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#5f736f">Lay out summaries as a tidy email.</div><div style="font:400 10.5px 'IBM Plex Mono';color:#96a8a4">used by 1 agent</div></div>
+              <div style="border:1.5px dashed rgba(18,140,130,.4);border-radius:13px;background:#f0f8f7;padding:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#0f7a71;min-height:104px"><div style="font:600 20px 'Space Grotesk'">＋</div><div style="font:500 12px 'IBM Plex Sans'">Author a skill</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6a QUICK WORKFLOW -->
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a><span><b>Workflows.</b> Describe a multi-step automation and the Platform Agent lays it out as a snap-together sequence — trigger, agents, a branch, an action — that you tweak and turn on.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:706px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)">Quick</span><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="flex:1;overflow:hidden;display:flex;min-height:0">
+            <!-- narrative / composer -->
+            <div style="flex:1;min-width:0;overflow:hidden;padding:30px 34px;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;max-width:520px;display:flex;flex-direction:column;gap:16px">
+                <div style="text-align:center"><div style="font:500 11px 'IBM Plex Mono';letter-spacing:.08em;color:#128c82;margin-bottom:8px">PLATFORM AGENT · NEW WORKFLOW</div><div style="font:600 24px 'Space Grotesk';letter-spacing:-.015em">Here's the flow I mapped out</div><div style="font:400 12.5px 'IBM Plex Sans';color:#5f736f;margin-top:6px">“When an invoice email arrives, file it — and ping me if it's a big one.”</div></div>
+                <!-- vertical stepper -->
+                <div style="display:flex;flex-direction:column;align-items:stretch;gap:0;margin-top:6px">
+                  <div style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid rgba(0,40,35,.12);border-radius:13px;padding:13px 15px;box-shadow:0 2px 10px rgba(10,60,55,.05)"><div style="width:32px;height:32px;border-radius:9px;background:#faf0e0;display:flex;align-items:center;justify-content:center;color:#e0912a;flex:none">◷</div><div style="flex:1"><div style="font:600 13.5px 'Space Grotesk'">When</div><div style="font:400 12px 'IBM Plex Sans';color:#5f736f">a new email lands in Gmail matching “invoice”</div></div><span style="font:500 15px;color:#c4d4d0">⋯</span></div>
+                  <div style="width:2px;height:16px;background:#cfe0dc;margin:0 auto"></div>
+                  <div style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid rgba(0,40,35,.12);border-radius:13px;padding:13px 15px;box-shadow:0 2px 10px rgba(10,60,55,.05)"><div style="width:32px;height:32px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;flex:none">●</div><div style="flex:1"><div style="font:600 13.5px 'Space Grotesk'">Run agent</div><div style="font:400 12px 'IBM Plex Sans';color:#5f736f">Invoice Filer — extracts vendor &amp; amount, files to Drive</div></div><span style="font:500 15px;color:#c4d4d0">⋯</span></div>
+                  <div style="width:2px;height:16px;background:#cfe0dc;margin:0 auto"></div>
+                  <div style="display:flex;align-items:center;gap:13px;background:#fff;border:1px dashed rgba(18,140,130,.45);border-radius:13px;padding:13px 15px"><div style="width:32px;height:32px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;flex:none">◈</div><div style="flex:1"><div style="font:600 13.5px 'Space Grotesk'">Only if</div><div style="font:400 12px 'IBM Plex Sans';color:#5f736f">amount is greater than <b style="color:#122120">$5,000</b></div></div><span style="font:500 15px;color:#c4d4d0">⋯</span></div>
+                  <div style="width:2px;height:16px;background:#cfe0dc;margin:0 auto"></div>
+                  <div style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid rgba(0,40,35,.12);border-radius:13px;padding:13px 15px;box-shadow:0 2px 10px rgba(10,60,55,.05)"><div style="width:32px;height:32px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;flex:none">◇</div><div style="flex:1"><div style="font:600 13.5px 'Space Grotesk'">Then notify</div><div style="font:400 12px 'IBM Plex Sans';color:#5f736f">send me a Slack message with the summary</div></div><span style="font:500 15px;color:#c4d4d0">⋯</span></div>
+                  <div style="width:2px;height:14px;background:#cfe0dc;margin:0 auto"></div>
+                  <div style="align-self:center;font:500 12px 'IBM Plex Sans';color:#0f7a71;border:1px dashed rgba(18,140,130,.4);border-radius:10px;padding:9px 16px;background:#f0f8f7">＋ Add a step</div>
+                </div>
+              </div>
+            </div>
+            <!-- right summary -->
+            <div style="width:300px;flex:none;border-left:1px solid rgba(0,40,35,.08);background:#fff;padding:22px 20px;display:flex;flex-direction:column;gap:16px">
+              <div><div style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;color:#96a8a4;margin-bottom:6px">WORKFLOW</div><div style="font:600 17px 'Space Grotesk'">Invoice Watch</div></div>
+              <div style="display:flex;flex-direction:column;gap:9px"><div style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;color:#96a8a4">USES</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font:500 11px 'IBM Plex Mono';background:#e4f2f0;color:#0f7a71;border-radius:6px;padding:3px 8px">◇ Gmail</span><span style="font:500 11px 'IBM Plex Mono';background:#e4f2f0;color:#0f7a71;border-radius:6px;padding:3px 8px">◇ Drive</span><span style="font:500 11px 'IBM Plex Mono';background:#e4f2f0;color:#0f7a71;border-radius:6px;padding:3px 8px">◇ Slack</span><span style="font:500 11px 'IBM Plex Mono';background:#eef3f2;color:#5f736f;border-radius:6px;padding:3px 8px">● Invoice Filer</span></div></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><div style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;color:#96a8a4">RUNS</div><div style="display:flex;align-items:center;gap:8px;font:400 12px 'IBM Plex Sans';color:#3f4f4c"><span style="width:8px;height:8px;border-radius:50%;background:#1fa85a"></span>Automatically, on each match</div></div>
+              <div style="flex:1"></div>
+              <button style="background:#fff;border:1px solid rgba(0,40,35,.16);border-radius:11px;padding:11px;font:600 13px 'IBM Plex Sans';color:#122120;cursor:pointer">Test run</button>
+              <button style="background:#128c82;border:none;border-radius:11px;padding:12px;font:600 13.5px 'IBM Plex Sans';color:#fff;cursor:pointer">Turn on workflow</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7a QUICK MCP -->
+    <div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a><span><b>Connections.</b> The citizen's view of MCP servers: connect a tool in one tap (OAuth, no jargon), see what's connected, or ask the Platform Agent to find and wire up a new one.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:706px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)">Quick</span><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:26px 40px;display:flex;flex-direction:column;gap:18px">
+            <div><div style="font:600 22px 'Space Grotesk';letter-spacing:-.015em">Connections</div><div style="font:400 12.5px 'IBM Plex Sans';color:#5f736f;margin-top:2px">The tools &amp; services your agents can reach · 3 connected</div></div>
+            <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(0,40,35,.12);border-radius:14px;box-shadow:0 4px 18px rgba(10,60,55,.06);padding:13px 15px">
+              <span style="width:9px;height:9px;border-radius:50%;background:#128c82;flex:none"></span>
+              <span style="font:400 13.5px 'IBM Plex Sans';color:#8ba09b;flex:1">Paste a server link, or tell me what to connect — “connect our Notion workspace”.</span>
+              <div style="width:34px;height:34px;border-radius:10px;background:#128c82;display:flex;align-items:center;justify-content:center;color:#fff;font:600 15px;flex:none">→</div>
+            </div>
+            <div style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;color:#96a8a4">CONNECTED</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px">
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:15px">◇</div><div><div style="font:600 13.5px 'Space Grotesk'">Gmail</div><div style="font:400 10.5px 'IBM Plex Sans';color:#96a8a4">alex@company.com</div></div></div><div style="display:flex;align-items:center;gap:7px;font:500 11px 'IBM Plex Sans';color:#1fa85a"><span style="width:7px;height:7px;border-radius:50%;background:#1fa85a"></span>Connected<span style="margin-left:auto;font:500 11px;color:#5f736f">Manage</span></div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:15px">◇</div><div><div style="font:600 13.5px 'Space Grotesk'">Slack</div><div style="font:400 10.5px 'IBM Plex Sans';color:#96a8a4">Acme workspace</div></div></div><div style="display:flex;align-items:center;gap:7px;font:500 11px 'IBM Plex Sans';color:#1fa85a"><span style="width:7px;height:7px;border-radius:50%;background:#1fa85a"></span>Connected<span style="margin-left:auto;font:500 11px;color:#5f736f">Manage</span></div></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:15px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:9px;background:#e4f2f0;display:flex;align-items:center;justify-content:center;color:#0f7a71;font-size:15px">◇</div><div><div style="font:600 13.5px 'Space Grotesk'">Google Drive</div><div style="font:400 10.5px 'IBM Plex Sans';color:#96a8a4">My Drive</div></div></div><div style="display:flex;align-items:center;gap:7px;font:500 11px 'IBM Plex Sans';color:#1fa85a"><span style="width:7px;height:7px;border-radius:50%;background:#1fa85a"></span>Connected<span style="margin-left:auto;font:500 11px;color:#5f736f">Manage</span></div></div>
+            </div>
+            <div style="font:600 10px 'IBM Plex Mono';letter-spacing:.06em;color:#96a8a4">AVAILABLE TO CONNECT</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:13px">
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;font-size:14px">◇</div><span style="font:600 13px 'Space Grotesk'">Zendesk</span></div><div style="font:400 11px/1.4 'IBM Plex Sans';color:#7d908c">Support tickets</div><span style="font:600 11.5px 'IBM Plex Sans';color:#0f7a71;border:1px solid rgba(18,140,130,.35);border-radius:8px;padding:7px;text-align:center">Connect</span></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;font-size:14px">◇</div><span style="font:600 13px 'Space Grotesk'">Notion</span></div><div style="font:400 11px/1.4 'IBM Plex Sans';color:#7d908c">Docs &amp; wikis</div><span style="font:600 11.5px 'IBM Plex Sans';color:#0f7a71;border:1px solid rgba(18,140,130,.35);border-radius:8px;padding:7px;text-align:center">Connect</span></div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:13px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:9px;background:#eef3f2;display:flex;align-items:center;justify-content:center;color:#5f736f;font-size:14px">◇</div><span style="font:600 13px 'Space Grotesk'">GitHub</span></div><div style="font:400 11px/1.4 'IBM Plex Sans';color:#7d908c">Repos &amp; issues</div><span style="font:600 11.5px 'IBM Plex Sans';color:#0f7a71;border:1px solid rgba(18,140,130,.35);border-radius:8px;padding:7px;text-align:center">Connect</span></div>
+              <div style="border:1.5px dashed rgba(18,140,130,.4);border-radius:13px;background:#f0f8f7;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#0f7a71"><div style="font:600 18px 'Space Grotesk'">＋</div><div style="font:500 11.5px 'IBM Plex Sans';text-align:center">Add from link</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "build these as the interactive prototype, wired to the toggle" · "in <a class="dv-oid" href="#5a">5a</a>, show a skill when you tap it" · "make <a class="dv-oid" href="#6a">6a</a>'s branch support multiple conditions" · "add a dark theme"</p>
+</section>
+
+<!-- ===================== PRO MODE ===================== -->
+<section class="dv-turn" id="tp">
+  <div class="dv-thd"><span class="dv-tid" style="background:#122120">PRO</span><span class="dv-tname">Pro mode — the developer experience (code, permissions, environments)</span></div>
+  <div class="dv-opts">
+
+    <!-- 4a PRO HOME -->
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span><b>Home.</b> The toggle flips to Pro: the prompt shrinks to a ⌘K command bar, an environment switcher and code/import entry points appear, and the primitives become a dense dev table (capabilities, env, version, runs, status).</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:718px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Quick</span><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#122120;color:#fff">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid rgba(0,40,35,.07);flex:none;background:#fff">
+            <div style="display:flex;background:#eef3f2;border-radius:8px;padding:3px;gap:2px;font-family:'IBM Plex Mono'"><span style="font:500 11.5px;padding:5px 11px;border-radius:5px;color:#5f736f">dev</span><span style="font:600 11.5px;padding:5px 11px;border-radius:5px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);color:#122120">staging</span><span style="font:500 11.5px;padding:5px 11px;border-radius:5px;color:#5f736f">prod</span></div>
+            <div style="flex:1;display:flex;align-items:center;gap:9px;background:#f2f6f5;border:1px solid rgba(0,40,35,.1);border-radius:9px;padding:9px 13px;color:#7d908c;font:400 12.5px 'JetBrains Mono'"><span style="color:#128c82">⌘K</span> ask the Platform Agent, or run a command…</div>
+            <span style="font:500 12px 'JetBrains Mono';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:8px;padding:8px 11px">{ } from code</span>
+            <span style="font:500 12px 'IBM Plex Sans';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:8px;padding:8px 11px">⤓ Import</span>
+            <span style="font:600 12.5px 'IBM Plex Sans';color:#fff;background:#128c82;border-radius:8px;padding:8px 13px">＋ New agent</span>
+          </div>
+          <div style="display:flex;gap:22px;padding:0 24px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <span style="font:600 12.5px 'IBM Plex Sans';padding:11px 0;color:#122120;border-bottom:2px solid #128c82">Agents</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">MCP Servers</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Skills</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Environments</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Versions</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:16px 22px;display:flex;flex-direction:column;gap:0">
+            <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:0 14px 9px;font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4"><span>AGENT</span><span>CAPABILITIES</span><span>ENV</span><span>VER</span><span>RUNS 24H</span><span>STATUS</span></div>
+            <div style="border:1px solid rgba(0,40,35,.09);border-radius:12px;background:#fff;overflow:hidden">
+              <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:13px 14px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span><span style="font:600 13px 'JetBrains Mono'">digest_writer</span></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="font:500 10.5px 'JetBrains Mono';background:#e4f2f0;color:#0f7a71;border-radius:5px;padding:2px 7px">◇ gmail</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ summarize</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">+1</span></div><span style="font:500 11px 'JetBrains Mono';color:#1fa85a">● prod</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">v4</span><span style="font:500 11px 'JetBrains Mono';color:#122120">61</span><span style="font:600 10.5px 'JetBrains Mono';color:#1fa85a">healthy</span></div>
+              <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:13px 14px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span><span style="font:600 13px 'JetBrains Mono'">support_triage</span></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="font:500 10.5px 'JetBrains Mono';background:#e4f2f0;color:#0f7a71;border-radius:5px;padding:2px 7px">◇ zendesk</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ classify</span></div><span style="font:500 11px 'JetBrains Mono';color:#1fa85a">● prod</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">v2</span><span style="font:500 11px 'JetBrains Mono';color:#122120">340</span><span style="font:600 10.5px 'JetBrains Mono';color:#1fa85a">healthy</span></div>
+              <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:13px 14px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span><span style="font:600 13px 'JetBrains Mono'">contract_reader</span></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ pdf_parse</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ extract</span></div><span style="font:500 11px 'JetBrains Mono';color:#e0912a">● staging</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">v1</span><span style="font:500 11px 'JetBrains Mono';color:#122120">12</span><span style="font:600 10.5px 'JetBrains Mono';color:#e0912a">review</span></div>
+              <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:13px 14px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span><span style="font:600 13px 'JetBrains Mono'">invoice_filer</span></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="font:500 10.5px 'JetBrains Mono';background:#e4f2f0;color:#0f7a71;border-radius:5px;padding:2px 7px">◇ drive</span><span style="font:500 10.5px 'JetBrains Mono';background:#e4f2f0;color:#0f7a71;border-radius:5px;padding:2px 7px">◇ postgres</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ extract</span></div><span style="font:500 11px 'JetBrains Mono';color:#96a8a4">● dev</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">v7</span><span style="font:500 11px 'JetBrains Mono';color:#122120">4</span><span style="font:600 10.5px 'JetBrains Mono';color:#96a8a4">building</span></div>
+              <div style="display:grid;grid-template-columns:2fr 2.4fr .9fr .7fr .9fr .9fr;gap:14px;padding:13px 14px;align-items:center"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#128c82"></span><span style="font:600 13px 'JetBrains Mono'">research_scout</span></div><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ web_search</span><span style="font:500 10.5px 'JetBrains Mono';background:#eef3f2;color:#5f736f;border-radius:5px;padding:2px 7px">▢ summarize</span></div><span style="font:500 11px 'JetBrains Mono';color:#1fa85a">● prod</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">v3</span><span style="font:500 11px 'JetBrains Mono';color:#122120">88</span><span style="font:600 10.5px 'JetBrains Mono';color:#1fa85a">healthy</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:12px 14px 0;font:400 11px 'JetBrains Mono';color:#96a8a4"><span>12 agents</span><span style="color:#1fa85a">3 in prod</span><span style="color:#e0912a">1 pending review</span><div style="flex:1"></div><span style="color:#128c82">Deploy staging → prod →</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4b PRO AGENT EDITOR -->
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a><span><b>Agent editor.</b> Identity + model, instructions as editable code, per-tool <b>permission scopes</b> (allow / ask / deny), MCP config, authored skills, a live test console, and a version + dev→staging→prod deploy matrix.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:718px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <span style="font:500 12.5px 'IBM Plex Sans';color:#7d908c">‹ Agents</span>
+            <span style="font:600 14px 'JetBrains Mono';color:#122120">digest_writer</span>
+            <span style="font:500 11px 'JetBrains Mono';color:#5f736f;background:#eef3f2;border-radius:6px;padding:4px 9px">v4 ▾</span>
+            <div style="display:flex;gap:5px;font:500 10.5px 'JetBrains Mono'"><span style="color:#1fa85a;background:#e4f4ea;border-radius:5px;padding:3px 7px">● prod</span><span style="color:#e0912a;background:#faf0e0;border-radius:5px;padding:3px 7px">● staging</span></div>
+            <div style="flex:1"></div>
+            <span style="font:600 12px 'IBM Plex Sans';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:8px;padding:7px 12px">▷ Test run</span>
+            <span style="font:600 12px 'IBM Plex Sans';color:#fff;background:#128c82;border-radius:8px;padding:7px 13px">Deploy</span>
+          </div>
+          <div style="flex:1;display:flex;min-height:0">
+            <div style="flex:1.35;min-width:0;overflow:hidden;padding:18px 20px;display:flex;flex-direction:column;gap:15px;border-right:1px solid rgba(0,40,35,.08)">
+              <div style="display:flex;gap:12px">
+                <div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:11px 13px"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4;margin-bottom:5px">NAME</div><div style="font:600 13px 'JetBrains Mono'">digest_writer</div></div>
+                <div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:11px 13px"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4;margin-bottom:5px">MODEL</div><div style="font:600 13px 'JetBrains Mono'">claude-sonnet ▾</div></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">INSTRUCTIONS</span><div style="flex:1"></div><span style="font:500 10px 'JetBrains Mono';color:#128c82;background:#e4f2f0;border-radius:5px;padding:3px 7px">{ } as code</span></div>
+                <div style="background:#0e1b1a;border-radius:10px;padding:13px 14px;font:400 11.5px/1.65 'JetBrains Mono';color:#9fd8cf"><span style="color:#5f8b85"># role</span><br>You are a <span style="color:#fff">weekly digest writer</span>. Pull unread<br>threads from Gmail, group by project, and<br>write a concise Monday summary.<br><span style="color:#5f8b85"># constraints</span><br>· max 8 bullets · link every source</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">TOOLS &amp; PERMISSIONS</span>
+                <div style="border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12px 'JetBrains Mono'">gmail.read</span><div style="flex:1"></div><span style="font:500 10px 'JetBrains Mono';color:#0f7a71;background:#e4f2f0;border-radius:5px;padding:3px 8px">read</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a;border:1px solid rgba(31,168,90,.35);border-radius:5px;padding:3px 8px">allow ▾</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12px 'JetBrains Mono'">gmail.send</span><div style="flex:1"></div><span style="font:500 10px 'JetBrains Mono';color:#b0522f;background:#fae8e0;border-radius:5px;padding:3px 8px">write</span><span style="font:600 10px 'JetBrains Mono';color:#e0912a;border:1px solid rgba(224,145,42,.4);border-radius:5px;padding:3px 8px">ask ▾</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 13px"><span style="width:8px;height:8px;border-radius:2px;background:#128c82"></span><span style="font:600 12px 'JetBrains Mono'">summarize</span><div style="flex:1"></div><span style="font:500 10px 'JetBrains Mono';color:#5f736f;background:#eef3f2;border-radius:5px;padding:3px 8px">skill</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a;border:1px solid rgba(31,168,90,.35);border-radius:5px;padding:3px 8px">allow ▾</span></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px">
+                <div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:11px 13px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 11px 'JetBrains Mono'">MCP · gmail</span><span style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#1fa85a"></span></div><div style="font:400 10.5px 'JetBrains Mono';color:#96a8a4">oauth · 2 scopes · ⚙ config</div></div>
+                <div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:11px 13px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:2px;background:#128c82"></span><span style="font:600 11px 'JetBrains Mono'">Skills · 2</span><span style="margin-left:auto;font:500 10px 'JetBrains Mono';color:#128c82">＋ author</span></div><div style="font:400 10.5px 'JetBrains Mono';color:#96a8a4">summarize · digest_format</div></div>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff">
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 18px;gap:10px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">TEST CONSOLE</span><span style="margin-left:auto;font:500 10px 'JetBrains Mono';color:#7d908c">env: staging</span></div>
+                <div style="flex:1;min-height:0;background:#0e1b1a;border-radius:10px;padding:13px 14px;font:400 11px/1.7 'JetBrains Mono';color:#9fd8cf;overflow:hidden">
+                  <div style="color:#e0c98a">▷ run digest_writer</div>
+                  <div style="color:#5f8b85">↳ tool gmail.read → 23 threads</div>
+                  <div style="color:#5f8b85">↳ skill summarize → 8 groups</div>
+                  <div style="color:#e0912a">⚠ gmail.send requires approval</div>
+                  <div style="color:#fff;margin-top:6px">Weekly digest drafted — 8 bullets across<br>Growth, Platform &amp; Support. Approve send?</div>
+                  <div style="display:flex;gap:7px;margin-top:9px"><span style="background:#128c82;color:#fff;border-radius:6px;padding:4px 10px;font-size:10px">Approve</span><span style="border:1px solid rgba(255,255,255,.2);color:#9fd8cf;border-radius:6px;padding:4px 10px;font-size:10px">Deny</span></div>
+                </div>
+                <div style="background:#f2f6f5;border:1px solid rgba(0,40,35,.1);border-radius:9px;padding:9px 12px;font:400 11px 'JetBrains Mono';color:#7d908c">↵ send a test message…</div>
+              </div>
+              <div style="border-top:1px solid rgba(0,40,35,.08);padding:14px 18px;display:flex;flex-direction:column;gap:11px">
+                <span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">VERSIONS &amp; DEPLOY</span>
+                <div style="display:flex;align-items:center;gap:6px;font:500 10.5px 'JetBrains Mono';color:#5f736f"><span style="color:#c4d4d0">v1</span><span style="color:#c4d4d0">—</span><span style="color:#c4d4d0">v2</span><span style="color:#c4d4d0">—</span><span style="color:#c4d4d0">v3</span><span style="color:#c4d4d0">—</span><span style="color:#122120;background:#e4f2f0;border-radius:5px;padding:2px 7px">v4 ●</span><span style="color:#128c82;margin-left:4px">＋ draft</span></div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:8px;padding:8px 10px;text-align:center"><div style="font:600 10px 'JetBrains Mono';color:#96a8a4">DEV</div><div style="font:600 11px 'JetBrains Mono';color:#122120;margin-top:2px">v4</div></div>
+                  <div style="flex:1;border:1px solid rgba(224,145,42,.4);background:#faf7f0;border-radius:8px;padding:8px 10px;text-align:center"><div style="font:600 10px 'JetBrains Mono';color:#e0912a">STAGING</div><div style="font:600 11px 'JetBrains Mono';color:#122120;margin-top:2px">v4</div></div>
+                  <div style="flex:1;border:1px solid rgba(31,168,90,.4);background:#f0f7f2;border-radius:8px;padding:8px 10px;text-align:center"><div style="font:600 10px 'JetBrains Mono';color:#1fa85a">PROD</div><div style="font:600 11px 'JetBrains Mono';color:#122120;margin-top:2px">v3</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5b PRO SKILL AUTHORING -->
+    <div class="dv-opt" id="5b">
+      <div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a><span><b>Skill authoring.</b> A skill is a versioned unit: a manifest (name, when-to-use, typed inputs), a prompt/definition as code, optional tools it may call, and a test harness that runs it against sample params.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:718px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <span style="font:500 12.5px 'IBM Plex Sans';color:#7d908c">‹ Skills</span>
+            <span style="font:600 14px 'JetBrains Mono';color:#122120">summarize</span>
+            <span style="font:500 11px 'JetBrains Mono';color:#5f736f;background:#eef3f2;border-radius:6px;padding:4px 9px">v3 ▾</span>
+            <span style="font:500 10.5px 'JetBrains Mono';color:#0f7a71;background:#e4f2f0;border-radius:5px;padding:3px 8px">used by 7</span>
+            <div style="flex:1"></div>
+            <span style="font:600 12px 'IBM Plex Sans';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:8px;padding:7px 12px">▷ Test</span>
+            <span style="font:600 12px 'IBM Plex Sans';color:#fff;background:#128c82;border-radius:8px;padding:7px 13px">Publish</span>
+          </div>
+          <div style="flex:1;display:flex;min-height:0">
+            <div style="flex:1.3;min-width:0;overflow:hidden;padding:18px 20px;display:flex;flex-direction:column;gap:15px;border-right:1px solid rgba(0,40,35,.08)">
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:9px">
+                <div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">WHEN TO USE</div>
+                <div style="font:400 12.5px/1.5 'IBM Plex Sans';color:#3f4f4c">Call this skill whenever a body of text needs to be condensed into a short set of key points.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">INPUTS</span>
+                <div style="border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="font:600 12px 'JetBrains Mono'">text</span><span style="font:500 10px 'JetBrains Mono';color:#0f7a71;background:#e4f2f0;border-radius:5px;padding:3px 7px">string</span><span style="font:400 11px 'JetBrains Mono';color:#96a8a4">required</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="font:600 12px 'JetBrains Mono'">max_bullets</span><span style="font:500 10px 'JetBrains Mono';color:#3aa0d6;background:#e2eef6;border-radius:5px;padding:3px 7px">int</span><span style="font:400 11px 'JetBrains Mono';color:#96a8a4">default 8</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 13px"><span style="font:500 12px 'JetBrains Mono';color:#128c82">＋ add parameter</span></div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;flex:1;min-height:0">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">DEFINITION</span><div style="flex:1"></div><span style="font:500 10px 'JetBrains Mono';color:#7d908c">prompt · markdown</span></div>
+                <div style="flex:1;background:#0e1b1a;border-radius:10px;padding:13px 14px;font:400 11.5px/1.65 'JetBrains Mono';color:#9fd8cf;overflow:hidden"><span style="color:#5f8b85"># task</span><br>Summarize <span style="color:#e0c98a">&lt;text&gt;</span> into at most<br><span style="color:#e0c98a">&lt;max_bullets&gt;</span> bullet points.<br><span style="color:#5f8b85"># rules</span><br>· lead with the outcome<br>· keep each bullet under 20 words<br>· preserve names, dates &amp; numbers</div>
+              </div>
+              <div style="border:1px solid rgba(0,40,35,.1);border-radius:10px;background:#fff;padding:11px 13px;display:flex;align-items:center;gap:8px"><span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">MAY CALL</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f;background:#eef3f2;border-radius:6px;padding:3px 8px">none</span><span style="font:500 11px 'JetBrains Mono';color:#128c82;margin-left:auto">＋ allow a tool</span></div>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff">
+              <div style="flex:1;min-height:0;padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+                <span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">TEST HARNESS</span>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="border:1px solid rgba(0,40,35,.1);border-radius:9px;padding:9px 12px"><div style="font:500 10px 'JetBrains Mono';color:#96a8a4;margin-bottom:4px">text</div><div style="font:400 11.5px/1.5 'IBM Plex Sans';color:#3f4f4c">Q3 grew 22% led by enterprise. Support backlog cleared. Hiring paused until…</div></div>
+                  <div style="display:flex;gap:8px"><div style="flex:1;border:1px solid rgba(0,40,35,.1);border-radius:9px;padding:9px 12px"><div style="font:500 10px 'JetBrains Mono';color:#96a8a4;margin-bottom:4px">max_bullets</div><div style="font:600 12px 'JetBrains Mono'">4</div></div><div style="align-self:stretch;display:flex;align-items:flex-end"><span style="font:600 12px 'IBM Plex Sans';color:#fff;background:#128c82;border-radius:9px;padding:10px 16px">Run ▷</span></div></div>
+                </div>
+                <div style="flex:1;min-height:0;background:#0e1b1a;border-radius:10px;padding:13px 14px;font:400 11px/1.7 'JetBrains Mono';color:#9fd8cf;overflow:hidden">
+                  <div style="color:#5f8b85">↳ output · 4 bullets · 0.8s</div>
+                  <div style="color:#fff;margin-top:5px">• Revenue up 22%, driven by enterprise<br>• Support backlog fully cleared<br>• Hiring paused pending Q4 plan<br>• Platform migration on track</div>
+                </div>
+              </div>
+              <div style="border-top:1px solid rgba(0,40,35,.08);padding:13px 18px;display:flex;align-items:center;gap:10px"><span style="font:600 10px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">VERSIONS</span><div style="display:flex;align-items:center;gap:6px;font:500 10.5px 'JetBrains Mono';color:#5f736f"><span style="color:#c4d4d0">v1</span><span style="color:#c4d4d0">v2</span><span style="color:#122120;background:#e4f2f0;border-radius:5px;padding:2px 7px">v3 ●</span></div><div style="flex:1"></div><span style="font:400 10.5px 'JetBrains Mono';color:#96a8a4">edited 2d ago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7b PRO MCP REGISTRY -->
+    <div class="dv-opt" id="7b">
+      <div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a><span><b>MCP registry.</b> The developer's server management: list with transport, auth, scopes &amp; health; add from URL or the registry; and a config pane exposing tool-level permissions, env vars and per-environment availability. Create · update · delete.</span></div>
+      <div class="dv-card" style="width:1080px;background:#f8faf9">
+        <div style="height:718px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#122120;background:#f8faf9;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:18px;height:56px;padding:0 22px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:#128c82;position:relative;flex:none"><div style="position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:9px;left:9px"></div></div><span style="font:600 15px 'Space Grotesk';letter-spacing:-.01em">Open Agents</span></div>
+            <div style="flex:1"></div>
+            <div style="display:flex;background:#eef3f2;border-radius:9px;padding:3px;gap:2px"><span style="font:500 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;color:#7d908c">Quick</span><span style="font:600 12.5px 'IBM Plex Sans';padding:5px 14px;border-radius:6px;background:#122120;color:#fff">Pro</span></div>
+            <div style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,40,35,.12);display:flex;align-items:center;justify-content:center;color:#5f736f">☾</div>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#128c82,#3aa0d6)"></div>
+          </div>
+          <div style="display:flex;gap:22px;padding:0 24px;border-bottom:1px solid rgba(0,40,35,.08);flex:none;background:#fff">
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Agents</span>
+            <span style="font:600 12.5px 'IBM Plex Sans';padding:11px 0;color:#122120;border-bottom:2px solid #128c82">MCP Servers</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Skills</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Environments</span>
+            <span style="font:500 12.5px 'IBM Plex Sans';padding:11px 0;color:#7d908c">Versions</span>
+          </div>
+          <div style="flex:1;display:flex;min-height:0">
+            <!-- list -->
+            <div style="flex:1.3;min-width:0;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:12px;border-right:1px solid rgba(0,40,35,.08)">
+              <div style="display:flex;align-items:center;gap:10px"><span style="font:600 15px 'Space Grotesk'">MCP Servers</span><span style="font:400 12px 'JetBrains Mono';color:#96a8a4">5</span><div style="flex:1"></div><span style="font:500 11.5px 'JetBrains Mono';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:7px;padding:6px 10px">⤓ from URL</span><span style="font:500 11.5px 'IBM Plex Sans';color:#122120;border:1px solid rgba(0,40,35,.14);border-radius:7px;padding:6px 10px">⌕ Registry</span><span style="font:600 11.5px 'IBM Plex Sans';color:#fff;background:#128c82;border-radius:7px;padding:6px 11px">＋ Add server</span></div>
+              <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:0 13px;font:600 9.5px 'JetBrains Mono';letter-spacing:.05em;color:#96a8a4"><span>SERVER</span><span>TRANSPORT</span><span>AUTH</span><span>TOOLS</span><span>STATUS</span></div>
+              <div style="border:1px solid rgba(0,40,35,.09);border-radius:12px;background:#fff;overflow:hidden">
+                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:13px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06);background:#f2f8f7;border-left:2px solid #128c82"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12.5px 'JetBrains Mono'">gmail</span></div><span style="font:500 11px 'JetBrains Mono';color:#5f736f">http</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">oauth</span><span style="font:500 11px 'JetBrains Mono';color:#122120">3</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a">● live</span></div>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:13px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12.5px 'JetBrains Mono'">zendesk</span></div><span style="font:500 11px 'JetBrains Mono';color:#5f736f">http</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">api_key</span><span style="font:500 11px 'JetBrains Mono';color:#122120">6</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a">● live</span></div>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:13px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12.5px 'JetBrains Mono'">postgres</span></div><span style="font:500 11px 'JetBrains Mono';color:#5f736f">stdio</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">env</span><span style="font:500 11px 'JetBrains Mono';color:#122120">12</span><span style="font:600 10px 'JetBrains Mono';color:#96a8a4">● idle</span></div>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:13px;align-items:center;border-bottom:1px solid rgba(0,40,35,.06)"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12.5px 'JetBrains Mono'">slack</span></div><span style="font:500 11px 'JetBrains Mono';color:#5f736f">sse</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">oauth</span><span style="font:500 11px 'JetBrains Mono';color:#122120">8</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a">● live</span></div>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr .8fr;gap:12px;padding:13px;align-items:center"><div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 12.5px 'JetBrains Mono'">drive</span></div><span style="font:500 11px 'JetBrains Mono';color:#5f736f">http</span><span style="font:500 11px 'JetBrains Mono';color:#5f736f">oauth</span><span style="font:500 11px 'JetBrains Mono';color:#122120">5</span><span style="font:600 10px 'JetBrains Mono';color:#e0912a">● auth</span></div>
+              </div>
+            </div>
+            <!-- config pane -->
+            <div style="width:300px;flex:none;background:#fff;padding:18px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;background:#128c82;transform:rotate(45deg)"></span><span style="font:600 14px 'JetBrains Mono'">gmail</span><span style="margin-left:auto;font:600 10px 'JetBrains Mono';color:#1fa85a">● live</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">ENDPOINT</div><div style="border:1px solid rgba(0,40,35,.1);border-radius:8px;padding:8px 10px;font:400 10.5px 'JetBrains Mono';color:#3f4f4c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://mcp.company.com/gmail</div></div>
+              <div style="display:flex;gap:10px"><div style="flex:1"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4;margin-bottom:5px">TRANSPORT</div><div style="font:600 11.5px 'JetBrains Mono'">http</div></div><div style="flex:1"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4;margin-bottom:5px">AUTH</div><div style="font:600 11.5px 'JetBrains Mono';color:#1fa85a">oauth ✓</div></div></div>
+              <div style="display:flex;flex-direction:column;gap:7px"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">EXPOSED TOOLS · PERMISSIONS</div><div style="border:1px solid rgba(0,40,35,.1);border-radius:9px;overflow:hidden"><div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="font:600 11px 'JetBrains Mono'">gmail.read</span><span style="margin-left:auto;font:600 9px 'JetBrains Mono';color:#1fa85a;border:1px solid rgba(31,168,90,.35);border-radius:5px;padding:2px 6px">allow</span></div><div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(0,40,35,.06)"><span style="font:600 11px 'JetBrains Mono'">gmail.send</span><span style="margin-left:auto;font:600 9px 'JetBrains Mono';color:#e0912a;border:1px solid rgba(224,145,42,.4);border-radius:5px;padding:2px 6px">ask</span></div><div style="display:flex;align-items:center;gap:8px;padding:8px 10px"><span style="font:600 11px 'JetBrains Mono'">gmail.search</span><span style="margin-left:auto;font:600 9px 'JetBrains Mono';color:#1fa85a;border:1px solid rgba(31,168,90,.35);border-radius:5px;padding:2px 6px">allow</span></div></div></div>
+              <div style="display:flex;flex-direction:column;gap:7px"><div style="font:600 9.5px 'JetBrains Mono';letter-spacing:.06em;color:#96a8a4">AVAILABLE IN</div><div style="display:flex;gap:6px"><span style="font:600 10px 'JetBrains Mono';color:#96a8a4;border:1px solid rgba(0,40,35,.12);border-radius:6px;padding:4px 9px">dev</span><span style="font:600 10px 'JetBrains Mono';color:#e0912a;border:1px solid rgba(224,145,42,.4);border-radius:6px;padding:4px 9px">staging</span><span style="font:600 10px 'JetBrains Mono';color:#1fa85a;border:1px solid rgba(31,168,90,.4);border-radius:6px;padding:4px 9px">prod</span></div></div>
+              <div style="flex:1"></div>
+              <div style="display:flex;gap:8px"><span style="flex:1;font:600 11.5px 'IBM Plex Sans';color:#122120;border:1px solid rgba(0,40,35,.16);border-radius:9px;padding:9px;text-align:center">Reconnect</span><span style="font:600 11.5px 'IBM Plex Sans';color:#c0392b;border:1px solid rgba(192,57,43,.3);border-radius:9px;padding:9px 12px;text-align:center">Delete</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "build the interactive prototype now — real toggle, real navigation" · "add a config drawer for adding a server in <a class="dv-oid" href="#7b">7b</a>" · "show the OAuth connect flow in <a class="dv-oid" href="#7a">7a</a>" · "do a full dark-theme pass"</p>
+</section>
+
+</x-dc>
+</body>
+</html>
