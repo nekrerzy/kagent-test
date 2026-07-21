@@ -55,8 +55,8 @@ def update_model_config(
     else:
         # Not rotating: keep whatever secret ref the CRD already had.
         existing_spec = existing.get("spec", {})
-        if "apiKeySecretRef" in existing_spec:
-            body["spec"]["apiKeySecretRef"] = existing_spec["apiKeySecretRef"]
+        if "apiKeySecret" in existing_spec:
+            body["spec"]["apiKeySecret"] = existing_spec["apiKeySecret"]
             body["spec"]["apiKeySecretKey"] = existing_spec.get(
                 "apiKeySecretKey", mappers.API_KEY_SECRET_KEY
             )

@@ -106,12 +106,20 @@ class K8sClient:
         self, plural: str, namespace: str, name: str, body: dict[str, Any]
     ) -> dict[str, Any]:
         self._require_config()
-        try:
-            return self._custom.replace_namespaced_custom_object(
-                GROUP, VERSION, namespace, plural, name, body
-            )
-        except ApiException as exc:
-            raise _map_api_exception(exc) from exc
+        # kagent's controller writes status right after any change, so the
+        # resourceVersion the caller read is routinely stale by replace time.
+        # On conflict, refresh the resourceVersion and retry.
+        for attempt in range(3):
+            try:
+                return self._custom.replace_namespaced_custom_object(
+                    GROUP, VERSION, namespace, plural, name, body
+                )
+            except ApiException as exc:
+                if exc.status != 409 or attempt == 2:
+                    raise _map_api_exception(exc) from exc
+                current = self.get(plural, namespace, name)
+                body["metadata"]["resourceVersion"] = current["metadata"]["resourceVersion"]
+        raise AssertionError("unreachable")
 
     def delete(self, plural: str, namespace: str, name: str) -> None:
         self._require_config()
