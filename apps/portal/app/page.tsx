@@ -156,6 +156,41 @@ function CatalogPageInner() {
           )
         )}
       </Section>
+
+      <Section title="Skills" loading={loading}>
+        {data?.skills.length ? (
+          <Grid>
+            {data.skills.map((skill) => (
+              <Link
+                key={`${skill.namespace}/${skill.name}`}
+                href="/skills"
+                className="card-link"
+              >
+                <h3 className="font-medium">{skill.name}</h3>
+                {skill.description && (
+                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                    {skill.description}
+                  </p>
+                )}
+                {skill.path && (
+                  <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                    {skill.path}
+                  </p>
+                )}
+                {skill.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {skill.tags.map((tag) => (
+                      <Tag key={tag}>{tag}</Tag>
+                    ))}
+                  </div>
+                )}
+              </Link>
+            ))}
+          </Grid>
+        ) : (
+          !loading && <Empty label="No skills yet." href="/skills" cta="Add one" />
+        )}
+      </Section>
     </div>
   );
 }

@@ -8,6 +8,7 @@ const links = [
   { href: "/agents/new", label: "Agents: new" },
   { href: "/mcp-servers/new", label: "MCP Servers: new" },
   { href: "/model-configs", label: "Model Configs" },
+  { href: "/skills", label: "Skills" },
 ];
 
 export function NavBar() {

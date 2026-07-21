@@ -46,13 +46,25 @@ export interface ToolRef {
   tool_names?: string[] | null;
 }
 
+export type AgentType = "Declarative" | "BYO";
+
+export interface SkillRef {
+  url: string;
+  name?: string | null;
+  path?: string | null;
+  ref?: string | null;
+}
+
 export interface AgentIn {
   name: string;
   namespace?: string | null;
   description?: string | null;
-  system_message: string;
+  type?: AgentType;
+  image?: string | null;
+  system_message?: string | null;
   model_config?: string | null;
   tools: ToolRef[];
+  skills: SkillRef[];
   tags: string[];
 }
 
@@ -98,10 +110,25 @@ export interface ModelConfigOut {
   ready: boolean | null;
 }
 
+export interface SkillIn {
+  name: string;
+  namespace?: string | null;
+  url: string;
+  path?: string | null;
+  ref?: string | null;
+  description?: string | null;
+  tags: string[];
+}
+
+export interface SkillOut extends SkillIn {
+  namespace: string;
+}
+
 export interface CatalogOut {
   agents: AgentOut[];
   mcp_servers: McpServerOut[];
   model_configs: ModelConfigOut[];
+  skills: SkillOut[];
   // One federated MCP URL serving every registered server's tools.
   mcp_endpoint?: string | null;
 }
@@ -357,4 +384,33 @@ export function deleteModelConfig(ns: string, name: string): Promise<void> {
   return request<void>(`/v1/model-configs/${ns}/${name}`, {
     method: "DELETE",
   });
+}
+
+// ---- skills ---------------------------------------------------------------
+
+export function listSkills(): Promise<SkillOut[]> {
+  return request<SkillOut[]>("/v1/skills");
+}
+
+export function getSkill(ns: string, name: string): Promise<SkillOut> {
+  return request<SkillOut>(`/v1/skills/${ns}/${name}`);
+}
+
+export function createSkill(input: SkillIn): Promise<SkillOut> {
+  return request<SkillOut>("/v1/skills", { method: "POST", body: json(input) });
+}
+
+export function updateSkill(
+  ns: string,
+  name: string,
+  input: SkillIn,
+): Promise<SkillOut> {
+  return request<SkillOut>(`/v1/skills/${ns}/${name}`, {
+    method: "PUT",
+    body: json(input),
+  });
+}
+
+export function deleteSkill(ns: string, name: string): Promise<void> {
+  return request<void>(`/v1/skills/${ns}/${name}`, { method: "DELETE" });
 }

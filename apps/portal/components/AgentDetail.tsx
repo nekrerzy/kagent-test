@@ -27,6 +27,7 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold">{agent.name}</h1>
             <ReadyBadge ready={agent.ready} />
+            <Tag>{agent.type ?? "Declarative"}</Tag>
           </div>
           {agent.description && (
             <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
@@ -65,29 +66,61 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
         </div>
       </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-          System message
-        </h2>
-        <pre className="surface whitespace-pre-wrap rounded-md p-3 text-sm">
-          {agent.system_message}
-        </pre>
-      </div>
+      {agent.type === "BYO" ? (
+        <div>
+          <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
+            Image
+          </h2>
+          <p className="surface rounded-md p-3 font-mono text-sm">{agent.image}</p>
+        </div>
+      ) : (
+        <>
+          <div>
+            <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
+              System message
+            </h2>
+            <pre className="surface whitespace-pre-wrap rounded-md p-3 text-sm">
+              {agent.system_message}
+            </pre>
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
+              Tools
+            </h2>
+            {agent.tools.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                No tools attached.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-1 text-sm">
+                {agent.tools.map((t) => (
+                  <li key={t.mcp_server}>
+                    <span className="font-medium">{t.mcp_server}</span>
+                    {t.tool_names ? `: ${t.tool_names.join(", ")}` : ": all tools"}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
 
       <div>
         <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-          Tools
+          Skills
         </h2>
-        {agent.tools.length === 0 ? (
+        {agent.skills.length === 0 ? (
           <p className="text-sm" style={{ color: "var(--muted)" }}>
-            No tools attached.
+            No skills attached.
           </p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
-            {agent.tools.map((t) => (
-              <li key={t.mcp_server}>
-                <span className="font-medium">{t.mcp_server}</span>
-                {t.tool_names ? `: ${t.tool_names.join(", ")}` : ": all tools"}
+            {agent.skills.map((s) => (
+              <li key={`${s.url}::${s.path ?? ""}`}>
+                <span className="font-medium">{s.name || s.url}</span>
+                {s.path && <span style={{ color: "var(--muted)" }}> · {s.path}</span>}
+                {s.ref && <span style={{ color: "var(--muted)" }}> @ {s.ref}</span>}
               </li>
             ))}
           </ul>

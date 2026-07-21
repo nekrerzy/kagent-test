@@ -96,6 +96,17 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
         spec = {"type": "Declarative", "declarative": declarative}
 
     if agent.skills:
+        # kagent defaults the agent container to privileged when skills are
+        # attached, which baseline PSA rejects (pods never schedule). An
+        # explicit non-privileged securityContext is honored and skills still
+        # load/execute as the container user.
+        deployment = spec.setdefault("byo" if agent.type == "BYO" else "declarative", {}).setdefault(
+            "deployment", {}
+        )
+        deployment["securityContext"] = {
+            "privileged": False,
+            "allowPrivilegeEscalation": False,
+        }
         spec["skills"] = {
             "gitRefs": [
                 {
