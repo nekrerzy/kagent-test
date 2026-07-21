@@ -291,6 +291,22 @@ export function getMcpServer(ns: string, name: string): Promise<McpServerOut> {
   return request<McpServerOut>(`/v1/mcp-servers/${ns}/${name}`);
 }
 
+export interface McpProbeOut {
+  reachable: boolean;
+  tools: DiscoveredTool[];
+  error?: string | null;
+}
+
+export function validateMcpServer(input: {
+  url: string;
+  protocol: Protocol;
+}): Promise<McpProbeOut> {
+  return request<McpProbeOut>("/v1/mcp-servers/validate", {
+    method: "POST",
+    body: json(input),
+  });
+}
+
 export function createMcpServer(input: McpServerIn): Promise<McpServerOut> {
   return request<McpServerOut>("/v1/mcp-servers", {
     method: "POST",

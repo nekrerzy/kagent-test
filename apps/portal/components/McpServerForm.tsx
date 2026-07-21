@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, McpServerIn, Protocol, createMcpServer, slugifyName } from "@/lib/api";
+import {
+  ApiError,
+  McpProbeOut,
+  McpServerIn,
+  Protocol,
+  createMcpServer,
+  slugifyName,
+  validateMcpServer,
+} from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { TagsInput } from "@/components/TagsInput";
 
@@ -16,6 +24,20 @@ export function McpServerForm() {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [probe, setProbe] = useState<McpProbeOut | null>(null);
+
+  const testConnection = async () => {
+    setTesting(true);
+    setProbe(null);
+    try {
+      setProbe(await validateMcpServer({ url, protocol }));
+    } catch (err) {
+      showError(err instanceof ApiError ? err.message : "Connection test failed");
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,10 +122,38 @@ export function McpServerForm() {
       </div>
 
       <div className="flex gap-2">
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={testConnection}
+          disabled={testing || !url}
+        >
+          {testing ? "Testing…" : "Test connection"}
+        </button>
         <button type="submit" className="btn-primary" disabled={submitting}>
           {submitting ? "Registering…" : "Register MCP server"}
         </button>
       </div>
+
+      {probe && (
+        <div
+          className="rounded-md border px-3 py-2 text-sm"
+          style={{ borderColor: "var(--border)" }}
+        >
+          {probe.reachable ? (
+            <>
+              <p>✓ Reachable — {probe.tools.length} tools discovered</p>
+              {probe.tools.length > 0 && (
+                <p className="mt-1" style={{ color: "var(--muted)" }}>
+                  {probe.tools.map((t) => t.name).join(", ")}
+                </p>
+              )}
+            </>
+          ) : (
+            <p style={{ color: "var(--muted)" }}>✗ Not reachable: {probe.error}</p>
+          )}
+        </div>
+      )}
     </form>
   );
 }

@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from platform_api import mappers
 from platform_api.config import Settings, get_settings
 from platform_api.k8s import K8sClient, PLURAL_REMOTE_MCP_SERVERS, get_k8s_client
-from platform_api.schemas import McpServerIn, McpServerOut
+from platform_api.mcp_probe import probe_mcp
+from platform_api.schemas import McpProbeIn, McpProbeOut, McpServerIn, McpServerOut
 
 router = APIRouter(prefix="/v1/mcp-servers", tags=["mcp-servers"])
 
@@ -21,8 +22,30 @@ def list_mcp_servers(
     return [mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)]
 
 
+@router.post("/validate", response_model=McpProbeOut)
+async def validate_mcp_server(probe: McpProbeIn) -> McpProbeOut:
+    result = await probe_mcp(probe.url, probe.protocol)
+    return McpProbeOut(**result)
+
+
 @router.post("", response_model=McpServerOut, status_code=201)
-def create_mcp_server(mcp: McpServerIn, k8s: K8sDep, settings: SettingsDep) -> McpServerOut:
+async def create_mcp_server(
+    mcp: McpServerIn,
+    k8s: K8sDep,
+    settings: SettingsDep,
+    validate: bool = Query(default=True),
+) -> McpServerOut:
+    # Probe before creating so registrations that can't complete an MCP
+    # handshake fail loudly here, not silently as a Not Ready CRD.
+    # ?validate=false is the escape hatch (e.g. a server that isn't up yet).
+    if validate:
+        result = await probe_mcp(mcp.url, mcp.protocol)
+        if not result["reachable"]:
+            raise HTTPException(
+                status_code=422,
+                detail=f"MCP server at {mcp.url} failed validation: {result['error']} "
+                "(pass ?validate=false to register anyway)",
+            )
     ns = mcp.namespace or settings.default_namespace
     created = k8s.create(PLURAL_REMOTE_MCP_SERVERS, ns, mappers.mcp_server_to_crd(mcp, ns))
     return mappers.mcp_server_from_crd(created)

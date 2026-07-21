@@ -87,6 +87,17 @@ class DiscoveredTool(BaseModel):
     description: str
 
 
+class McpProbeIn(BaseModel):
+    url: str
+    protocol: Protocol = "STREAMABLE_HTTP"
+
+
+class McpProbeOut(BaseModel):
+    reachable: bool
+    tools: list[DiscoveredTool] = Field(default_factory=list)
+    error: str | None = None
+
+
 class McpServerOut(McpServerIn):
     ready: bool | None = None
     discovered_tools: list[DiscoveredTool] = Field(default_factory=list)

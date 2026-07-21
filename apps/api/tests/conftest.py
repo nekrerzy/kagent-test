@@ -76,6 +76,16 @@ def fake_k8s() -> FakeK8sClient:
     return FakeK8sClient()
 
 
+@pytest.fixture(autouse=True)
+def reachable_mcp_probe(monkeypatch: pytest.MonkeyPatch):
+    """MCP registration probes succeed by default; tests override per-case."""
+
+    async def fake_probe(url: str, protocol: str) -> dict:
+        return {"reachable": True, "tools": [], "error": None}
+
+    monkeypatch.setattr("platform_api.routers.mcp_servers.probe_mcp", fake_probe)
+
+
 @pytest.fixture
 def client(fake_k8s: FakeK8sClient) -> TestClient:
     app = create_app()

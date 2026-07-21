@@ -36,3 +36,35 @@ def test_update_and_delete_mcp_server(client):
     assert resp.status_code == 204
     resp = client.get("/v1/mcp-servers/kagent/m1")
     assert resp.status_code == 404
+
+
+def test_create_rejects_unreachable_mcp_server(client, monkeypatch):
+    async def failing_probe(url: str, protocol: str) -> dict:
+        return {"reachable": False, "tools": [], "error": "connection refused"}
+
+    monkeypatch.setattr("platform_api.routers.mcp_servers.probe_mcp", failing_probe)
+    resp = client.post("/v1/mcp-servers", json={"name": "down", "url": "http://down:1/mcp"})
+    assert resp.status_code == 422
+    assert "connection refused" in resp.json()["detail"]
+
+    # Escape hatch: register anyway without probing.
+    resp = client.post(
+        "/v1/mcp-servers?validate=false", json={"name": "down", "url": "http://down:1/mcp"}
+    )
+    assert resp.status_code == 201
+
+
+def test_validate_endpoint_reports_probe_result(client, monkeypatch):
+    async def probe(url: str, protocol: str) -> dict:
+        return {
+            "reachable": True,
+            "tools": [{"name": "echo", "description": "Echoes"}],
+            "error": None,
+        }
+
+    monkeypatch.setattr("platform_api.routers.mcp_servers.probe_mcp", probe)
+    resp = client.post("/v1/mcp-servers/validate", json={"url": "http://x/mcp"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["reachable"] is True
+    assert body["tools"][0]["name"] == "echo"
