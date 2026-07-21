@@ -36,8 +36,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="surface flex max-w-sm items-start gap-3 rounded-md border-l-4 px-4 py-3 text-sm shadow-lg"
-            style={{ borderLeftColor: "var(--danger)" }}
+            className="flex max-w-sm items-start gap-3 rounded-[var(--radius-md)] bg-white px-4 py-3 text-sm shadow-lg"
+            style={{ border: "1px solid var(--color-border)", borderLeft: "4px solid var(--color-danger)" }}
           >
             <span className="flex-1">{toast.message}</span>
             <button

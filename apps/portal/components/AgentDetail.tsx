@@ -24,13 +24,13 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">{agent.name}</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="heading text-xl">{agent.name}</h1>
             <ReadyBadge ready={agent.ready} />
             <Tag>{agent.type ?? "Declarative"}</Tag>
           </div>
           {agent.description && (
-            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+            <p className="mt-1.5 text-sm" style={{ color: "var(--color-muted)" }}>
               {agent.description}
             </p>
           )}
@@ -42,8 +42,8 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
             </div>
           )}
           {agent.a2a_url && (
-            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
-              A2A URL: <code>{agent.a2a_url}</code>
+            <p className="mt-2" style={{ color: "var(--color-muted-3)", fontFamily: "var(--font-mono)", fontSize: "11px" }}>
+              A2A URL: {agent.a2a_url}
             </p>
           )}
         </div>
@@ -67,37 +67,31 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
       </div>
 
       {agent.type === "BYO" ? (
-        <div>
-          <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-            Image
-          </h2>
-          <p className="surface rounded-md p-3 font-mono text-sm">{agent.image}</p>
+        <div className="panel flex flex-col gap-2">
+          <span className="mono-caption">Image</span>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px" }}>{agent.image}</p>
         </div>
       ) : (
         <>
-          <div>
-            <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-              System message
-            </h2>
-            <pre className="surface whitespace-pre-wrap rounded-md p-3 text-sm">
-              {agent.system_message}
-            </pre>
+          <div className="panel flex flex-col gap-2">
+            <span className="mono-caption">System message</span>
+            <pre className="code-block whitespace-pre-wrap p-3">{agent.system_message}</pre>
           </div>
 
-          <div>
-            <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-              Tools
-            </h2>
+          <div className="panel flex flex-col gap-2">
+            <span className="mono-caption">Tools</span>
             {agent.tools.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
                 No tools attached.
               </p>
             ) : (
-              <ul className="flex flex-col gap-1 text-sm">
+              <ul className="flex flex-col gap-1.5 text-sm">
                 {agent.tools.map((t) => (
-                  <li key={t.mcp_server}>
-                    <span className="font-medium">{t.mcp_server}</span>
-                    {t.tool_names ? `: ${t.tool_names.join(", ")}` : ": all tools"}
+                  <li key={t.mcp_server} className="flex items-center gap-2">
+                    <span className="pill pill-tint">{t.mcp_server}</span>
+                    <span style={{ color: "var(--color-muted)" }}>
+                      {t.tool_names ? t.tool_names.join(", ") : "all tools"}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -106,21 +100,21 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
         </>
       )}
 
-      <div>
-        <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-          Skills
-        </h2>
+      <div className="panel flex flex-col gap-2">
+        <span className="mono-caption">Skills</span>
         {agent.skills.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
             No skills attached.
           </p>
         ) : (
-          <ul className="flex flex-col gap-1 text-sm">
+          <ul className="flex flex-col gap-1.5 text-sm">
             {agent.skills.map((s) => (
               <li key={s.image ? `img::${s.image}` : `${s.url}::${s.path ?? ""}`}>
-                <span className="font-medium">{s.name || s.url || s.image}</span>
-                {s.path && <span style={{ color: "var(--muted)" }}> · {s.path}</span>}
-                {s.ref && <span style={{ color: "var(--muted)" }}> @ {s.ref}</span>}
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                  {s.name || s.url || s.image}
+                </span>
+                {s.path && <span style={{ color: "var(--color-muted)" }}> · {s.path}</span>}
+                {s.ref && <span style={{ color: "var(--color-muted)" }}> @ {s.ref}</span>}
               </li>
             ))}
           </ul>
@@ -130,9 +124,7 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
       <AgentCardViewer namespace={namespace} name={name} />
 
       <div>
-        <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-          Playground
-        </h2>
+        <h2 className="mono-caption mb-2">Playground</h2>
         <ChatPanel namespace={namespace} name={name} />
       </div>
     </div>

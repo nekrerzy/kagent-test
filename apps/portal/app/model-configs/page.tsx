@@ -64,40 +64,42 @@ export default function ModelConfigsPage() {
   return (
     <div className="flex flex-col gap-10">
       <div>
-        <h1 className="mb-6 text-xl font-semibold">Model configs</h1>
+        <h1 className="heading mb-6 text-xl">Model configs</h1>
         {error && <ErrorBanner message={error} />}
-        {loading && <p style={{ color: "var(--muted)" }}>Loading…</p>}
+        {loading && <p style={{ color: "var(--color-muted)" }}>Loading…</p>}
         {configs?.length === 0 && !loading && (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
             No model configs yet.
           </p>
         )}
         {configs && configs.length > 0 && (
-          <div className="surface overflow-x-auto rounded-md">
-            <table className="w-full text-left text-sm">
+          <div className="table-shell overflow-x-auto">
+            <table>
               <thead>
-                <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <th className="px-3 py-2 font-medium">Name</th>
-                  <th className="px-3 py-2 font-medium">Provider</th>
-                  <th className="px-3 py-2 font-medium">Model</th>
-                  <th className="px-3 py-2 font-medium">Base URL</th>
-                  <th className="px-3 py-2 font-medium">Ready</th>
-                  <th className="px-3 py-2" />
+                <tr>
+                  <th>Name</th>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Base URL</th>
+                  <th>Status</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
                 {configs.map((mc) => (
-                  <tr key={`${mc.namespace}/${mc.name}`} className="border-b last:border-0" style={{ borderColor: "var(--border)" }}>
-                    <td className="px-3 py-2">{mc.name}</td>
-                    <td className="px-3 py-2">{mc.provider}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{mc.model}</td>
-                    <td className="px-3 py-2 text-xs" style={{ color: "var(--muted)" }}>
+                  <tr key={`${mc.namespace}/${mc.name}`}>
+                    <td className="name-mono">{mc.name}</td>
+                    <td>
+                      <span className="pill">{mc.provider}</span>
+                    </td>
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>{mc.model}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-muted)" }}>
                       {mc.base_url ?? "—"}
                     </td>
-                    <td className="px-3 py-2">
+                    <td>
                       <ReadyBadge ready={mc.ready} />
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="text-right">
                       <ConfirmButton
                         label="Delete"
                         confirmMessage={`Delete model config "${mc.name}"? This cannot be undone.`}
@@ -120,8 +122,8 @@ export default function ModelConfigsPage() {
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold">New model config</h2>
-        <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-5">
+        <h2 className="heading mb-4 text-lg">New model config</h2>
+        <form onSubmit={handleSubmit} className="panel flex max-w-2xl flex-col gap-5">
           <div>
             <label className="field-label" htmlFor="name">
               Name
@@ -131,7 +133,7 @@ export default function ModelConfigsPage() {
               required
               value={name}
               onChange={(e) => setName(slugifyName(e.target.value))}
-              className="field-input"
+              className="field-input font-mono"
             />
           </div>
 
@@ -163,7 +165,7 @@ export default function ModelConfigsPage() {
               placeholder="e.g. gpt-oss"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="field-input"
+              className="field-input font-mono"
             />
           </div>
 
@@ -176,7 +178,7 @@ export default function ModelConfigsPage() {
               placeholder="http://10.20.0.1:9292/v1"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              className="field-input"
+              className="field-input font-mono"
             />
           </div>
 
@@ -192,7 +194,7 @@ export default function ModelConfigsPage() {
               onChange={(e) => setApiKey(e.target.value)}
               className="field-input"
             />
-            <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+            <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
               Stored as a cluster Secret. It will never be shown again after saving.
             </p>
           </div>

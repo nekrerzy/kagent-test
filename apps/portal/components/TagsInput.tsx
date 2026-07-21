@@ -20,11 +20,7 @@ export function TagsInput({ value, onChange }: TagsInputProps) {
   return (
     <div className="field-input flex flex-wrap items-center gap-1.5">
       {value.map((tag) => (
-        <span
-          key={tag}
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
-          style={{ background: "var(--border)", color: "var(--muted)" }}
-        >
+        <span key={tag} className="pill">
           {tag}
           <button
             type="button"

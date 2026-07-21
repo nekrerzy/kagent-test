@@ -61,70 +61,73 @@ export function McpServerForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-5">
-      <div>
-        <label className="field-label" htmlFor="name">
-          Name
-        </label>
-        <input
-          id="name"
-          required
-          value={name}
-          onChange={(e) => setName(slugifyName(e.target.value))}
-          className="field-input"
-        />
-      </div>
+      <div className="panel flex flex-col gap-4">
+        <span className="mono-caption">Registration</span>
+        <div>
+          <label className="field-label" htmlFor="name">
+            Name
+          </label>
+          <input
+            id="name"
+            required
+            value={name}
+            onChange={(e) => setName(slugifyName(e.target.value))}
+            className="field-input font-mono"
+          />
+        </div>
 
-      <div>
-        <label className="field-label" htmlFor="url">
-          URL
-        </label>
-        <input
-          id="url"
-          required
-          type="url"
-          placeholder="https://example.com/mcp"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="field-input"
-        />
-      </div>
+        <div>
+          <label className="field-label" htmlFor="url">
+            URL
+          </label>
+          <input
+            id="url"
+            required
+            type="url"
+            placeholder="https://example.com/mcp"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="field-input font-mono"
+          />
+        </div>
 
-      <div>
-        <label className="field-label" htmlFor="protocol">
-          Protocol
-        </label>
-        <select
-          id="protocol"
-          value={protocol}
-          onChange={(e) => setProtocol(e.target.value as Protocol)}
-          className="field-input"
-        >
-          <option value="STREAMABLE_HTTP">STREAMABLE_HTTP</option>
-          <option value="SSE">SSE</option>
-        </select>
-      </div>
+        <div>
+          <label className="field-label" htmlFor="protocol">
+            Protocol
+          </label>
+          <select
+            id="protocol"
+            value={protocol}
+            onChange={(e) => setProtocol(e.target.value as Protocol)}
+            className="field-input"
+          >
+            <option value="STREAMABLE_HTTP">STREAMABLE_HTTP</option>
+            <option value="SSE">SSE</option>
+          </select>
+        </div>
 
-      <div>
-        <label className="field-label" htmlFor="description">
-          Description
-        </label>
-        <input
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="field-input"
-        />
-      </div>
+        <div>
+          <label className="field-label" htmlFor="description">
+            Description
+          </label>
+          <input
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="field-input"
+          />
+        </div>
 
-      <div>
-        <label className="field-label">Tags</label>
-        <TagsInput value={tags} onChange={setTags} />
+        <div>
+          <label className="field-label">Tags</label>
+          <TagsInput value={tags} onChange={setTags} />
+        </div>
       </div>
 
       <div className="flex gap-2">
         <button
           type="button"
-          className="btn-primary"
+          className="btn-secondary"
           onClick={testConnection}
           disabled={testing || !url}
         >
@@ -136,21 +139,20 @@ export function McpServerForm() {
       </div>
 
       {probe && (
-        <div
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: "var(--border)" }}
-        >
+        <div className={`px-4 py-3 text-sm ${probe.reachable ? "panel-tint" : "panel-warning"}`}>
           {probe.reachable ? (
             <>
-              <p>✓ Reachable — {probe.tools.length} tools discovered</p>
+              <p className="font-medium" style={{ color: "var(--color-primary-hover)" }}>
+                ✓ Reachable — {probe.tools.length} tools discovered
+              </p>
               {probe.tools.length > 0 && (
-                <p className="mt-1" style={{ color: "var(--muted)" }}>
+                <p className="mt-1" style={{ color: "var(--color-muted)", fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                   {probe.tools.map((t) => t.name).join(", ")}
                 </p>
               )}
             </>
           ) : (
-            <p style={{ color: "var(--muted)" }}>✗ Not reachable: {probe.error}</p>
+            <p style={{ color: "var(--color-warning)" }}>✗ Not reachable: {probe.error}</p>
           )}
         </div>
       )}

@@ -24,12 +24,12 @@ export function McpServerDetail({ namespace, name }: { namespace: string; name: 
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">{server.name}</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="heading text-xl">{server.name}</h1>
             <ReadyBadge ready={server.ready} />
           </div>
           {server.description && (
-            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+            <p className="mt-1.5 text-sm" style={{ color: "var(--color-muted)" }}>
               {server.description}
             </p>
           )}
@@ -40,9 +40,12 @@ export function McpServerDetail({ namespace, name }: { namespace: string; name: 
               ))}
             </div>
           )}
-          <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
-            {server.protocol} · <code>{server.url}</code>
-          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="pill">{server.protocol}</span>
+            <code style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-muted)" }}>
+              {server.url}
+            </code>
+          </div>
         </div>
         <ConfirmButton
           label="Delete"
@@ -59,29 +62,27 @@ export function McpServerDetail({ namespace, name }: { namespace: string; name: 
       </div>
 
       <div>
-        <h2 className="mb-2 text-sm font-medium" style={{ color: "var(--muted)" }}>
-          Discovered tools
-        </h2>
+        <h2 className="mono-caption mb-2">Discovered tools</h2>
         {server.discovered_tools.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
             No tools discovered yet.
           </p>
         ) : (
-          <div className="surface overflow-x-auto rounded-md">
-            <table className="w-full text-left text-sm">
+          <div className="table-shell overflow-x-auto">
+            <table>
               <thead>
-                <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <th className="px-3 py-2 font-medium">Name</th>
-                  <th className="px-3 py-2 font-medium">Description</th>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
                 </tr>
               </thead>
               <tbody>
                 {server.discovered_tools.map((tool) => (
-                  <tr key={tool.name} className="border-b last:border-0" style={{ borderColor: "var(--border)" }}>
-                    <td className="px-3 py-2 font-mono text-xs">{tool.name}</td>
-                    <td className="px-3 py-2" style={{ color: "var(--muted)" }}>
-                      {tool.description ?? "—"}
+                  <tr key={tool.name}>
+                    <td>
+                      <span className="pill pill-tint">{tool.name}</span>
                     </td>
+                    <td style={{ color: "var(--color-muted)" }}>{tool.description ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

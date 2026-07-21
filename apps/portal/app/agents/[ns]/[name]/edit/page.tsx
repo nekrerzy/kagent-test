@@ -9,7 +9,9 @@ export default async function EditAgentPage({
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold">Edit agent: {name}</h1>
+      <h1 className="heading mb-6 text-xl">
+        Edit agent: <span style={{ fontFamily: "var(--font-mono)" }}>{name}</span>
+      </h1>
       <AgentEditLoader namespace={ns} name={name} />
     </div>
   );

@@ -68,10 +68,10 @@ export function ChatPanel({ namespace, name }: { namespace: string; name: string
   };
 
   return (
-    <div className="surface flex h-[32rem] flex-col rounded-lg">
+    <div className="surface flex h-[32rem] flex-col rounded-[var(--radius-lg)]">
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 && (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
             Say something to start a conversation with this agent.
           </p>
         )}
@@ -80,28 +80,24 @@ export function ChatPanel({ namespace, name }: { namespace: string; name: string
             msg.role === "agent" && !msg.text ? null : (
               <div
                 key={i}
-                className="max-w-[85%] rounded-md px-3 py-2 text-sm whitespace-pre-wrap"
-                style={
-                  msg.role === "user"
-                    ? { alignSelf: "flex-end", background: "var(--accent)", color: "var(--accent-foreground)" }
-                    : { alignSelf: "flex-start", background: "var(--border)" }
-                }
+                className={`max-w-[85%] rounded-[var(--radius-md)] px-3.5 py-2.5 text-sm whitespace-pre-wrap ${
+                  msg.role === "user" ? "chat-bubble-user" : "chat-bubble-agent"
+                }`}
+                style={{ alignSelf: msg.role === "user" ? "flex-end" : "flex-start" }}
               >
                 {msg.text}
               </div>
             ),
           )}
           {busy && activity && (
-            <div
-              className="max-w-[85%] rounded-md px-3 py-2 text-sm"
-              style={{ alignSelf: "flex-start", background: "var(--border)", color: "var(--muted)" }}
-            >
+            <div className="activity-line" style={{ alignSelf: "flex-start" }}>
+              <span className="activity-dot" />
               {activity}
             </div>
           )}
         </div>
       </div>
-      <form onSubmit={send} className="flex gap-2 border-t p-3" style={{ borderColor: "var(--border)" }}>
+      <form onSubmit={send} className="flex gap-2 border-t p-3" style={{ borderColor: "var(--color-border)" }}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

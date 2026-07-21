@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCatalog } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
@@ -13,8 +13,22 @@ function CatalogPageInner() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const [draft, setDraft] = useState(q);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const { data, error, loading } = useApi(() => getCatalog(q || undefined), [q]);
+
+  // ⌘K / Ctrl+K focuses the search bar, like the command-bar treatment in
+  // the design reference.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,105 +39,157 @@ function CatalogPageInner() {
 
   return (
     <div className="flex flex-col gap-10">
-      <form onSubmit={submitSearch} className="flex gap-2">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Search agents, MCP servers, model configs…"
-          className="field-input max-w-lg"
-        />
-        <button type="submit" className="btn-primary">
-          Search
-        </button>
-        {q && (
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              setDraft("");
-              router.push("/");
-            }}
-          >
-            Clear
-          </button>
-        )}
-      </form>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form onSubmit={submitSearch} className="cmdk-bar flex-1">
+          <span className="cmdk-kbd">⌘K</span>
+          <input
+            ref={searchRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="search agents, MCP servers, model configs…"
+          />
+          {q && (
+            <button
+              type="button"
+              className="text-xs font-medium"
+              style={{ color: "var(--color-muted-2)" }}
+              onClick={() => {
+                setDraft("");
+                router.push("/");
+              }}
+            >
+              clear
+            </button>
+          )}
+        </form>
+        <div className="flex gap-2">
+          <Link href="/mcp-servers/new" className="btn-secondary">
+            + MCP server
+          </Link>
+          <Link href="/agents/new" className="btn-primary">
+            + New agent
+          </Link>
+        </div>
+      </div>
 
       {error && <ErrorBanner message={error} />}
 
       {data?.mcp_endpoint && (
-        <div
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: "var(--border)" }}
-        >
-          Federated MCP endpoint (all registered servers, one URL):{" "}
-          <code className="select-all">{data.mcp_endpoint}</code>
+        <div className="panel-tint flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
+          <span className="font-medium" style={{ color: "var(--color-primary-hover)" }}>
+            Federated MCP endpoint
+          </span>
+          <span style={{ color: "var(--color-muted)" }}>— all registered servers, one URL:</span>
+          <code
+            className="select-all rounded-[6px] bg-white px-2 py-0.5"
+            style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-ink)" }}
+          >
+            {data.mcp_endpoint}
+          </code>
         </div>
       )}
 
-      <Section title="Agents" loading={loading}>
+      <Section id="agents" title="Agents" count={data?.agents.length} loading={loading}>
         {data?.agents.length ? (
-          <Grid>
-            {data.agents.map((agent) => (
-              <Link
-                key={`${agent.namespace}/${agent.name}`}
-                href={`/agents/${agent.namespace}/${agent.name}`}
-                className="card-link"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium">{agent.name}</h3>
-                  <ReadyBadge ready={agent.ready} />
-                </div>
-                {agent.description && (
-                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                    {agent.description}
-                  </p>
-                )}
-                {agent.tags.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {agent.tags.map((tag) => (
-                      <Tag key={tag}>{tag}</Tag>
-                    ))}
-                  </div>
-                )}
-              </Link>
-            ))}
-          </Grid>
+          <div className="table-shell overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Description</th>
+                  <th>Tags</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.agents.map((agent) => (
+                  <tr key={`${agent.namespace}/${agent.name}`}>
+                    <td>
+                      <Link
+                        href={`/agents/${agent.namespace}/${agent.name}`}
+                        className="flex items-center gap-2"
+                      >
+                        <span
+                          className={`status-dot ${
+                            agent.ready === true
+                              ? "status-dot-success"
+                              : agent.ready === false
+                                ? "status-dot-warning"
+                                : "status-dot-muted"
+                          }`}
+                        />
+                        <span className="name-mono">{agent.name}</span>
+                      </Link>
+                    </td>
+                    <td style={{ color: "var(--color-muted)" }}>{agent.description || "—"}</td>
+                    <td>
+                      {agent.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {agent.tags.map((tag) => (
+                            <Tag key={tag}>{tag}</Tag>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <ReadyBadge ready={agent.ready} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           !loading && <Empty label="No agents yet." href="/agents/new" cta="Create one" />
         )}
       </Section>
 
-      <Section title="MCP Servers" loading={loading}>
+      <Section id="mcp-servers" title="MCP Servers" count={data?.mcp_servers.length} loading={loading}>
         {data?.mcp_servers.length ? (
-          <Grid>
-            {data.mcp_servers.map((server) => (
-              <Link
-                key={`${server.namespace}/${server.name}`}
-                href={`/mcp-servers/${server.namespace}/${server.name}`}
-                className="card-link"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium">{server.name}</h3>
-                  <ReadyBadge ready={server.ready} />
-                </div>
-                {server.description && (
-                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                    {server.description}
-                  </p>
-                )}
-                <p className="mt-3 text-xs" style={{ color: "var(--muted)" }}>
-                  {server.discovered_tools.length} tool
-                  {server.discovered_tools.length === 1 ? "" : "s"}
-                  {server.discovered_tools.length > 0 &&
-                    `: ${server.discovered_tools
-                      .slice(0, 4)
-                      .map((t) => t.name)
-                      .join(", ")}${server.discovered_tools.length > 4 ? "…" : ""}`}
-                </p>
-              </Link>
-            ))}
-          </Grid>
+          <div className="table-shell overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Server</th>
+                  <th>Description</th>
+                  <th>Protocol</th>
+                  <th>Tools</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.mcp_servers.map((server) => (
+                  <tr key={`${server.namespace}/${server.name}`}>
+                    <td>
+                      <Link
+                        href={`/mcp-servers/${server.namespace}/${server.name}`}
+                        className="flex items-center gap-2"
+                      >
+                        <span
+                          className={`status-dot ${
+                            server.ready === true
+                              ? "status-dot-success"
+                              : server.ready === false
+                                ? "status-dot-warning"
+                                : "status-dot-muted"
+                          }`}
+                        />
+                        <span className="name-mono">{server.name}</span>
+                      </Link>
+                    </td>
+                    <td style={{ color: "var(--color-muted)" }}>{server.description || "—"}</td>
+                    <td>
+                      <span className="pill">{server.protocol}</span>
+                    </td>
+                    <td style={{ fontFamily: "var(--font-mono)" }}>{server.discovered_tools.length}</td>
+                    <td>
+                      <ReadyBadge ready={server.ready} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           !loading && (
             <Empty label="No MCP servers yet." href="/mcp-servers/new" cta="Register one" />
@@ -131,16 +197,16 @@ function CatalogPageInner() {
         )}
       </Section>
 
-      <Section title="Model Configs" loading={loading}>
+      <Section id="model-configs" title="Model Configs" count={data?.model_configs.length} loading={loading}>
         {data?.model_configs.length ? (
           <Grid>
             {data.model_configs.map((mc) => (
               <div key={`${mc.namespace}/${mc.name}`} className="card-link">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium">{mc.name}</h3>
+                  <h3 className="heading text-sm">{mc.name}</h3>
                   <ReadyBadge ready={mc.ready} />
                 </div>
-                <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                <p className="mt-1.5 text-sm" style={{ color: "var(--color-muted)", fontFamily: "var(--font-mono)" }}>
                   {mc.provider} · {mc.model}
                 </p>
               </div>
@@ -157,7 +223,7 @@ function CatalogPageInner() {
         )}
       </Section>
 
-      <Section title="Skills" loading={loading}>
+      <Section id="skills" title="Skills" count={data?.skills.length} loading={loading}>
         {data?.skills.length ? (
           <Grid>
             {data.skills.map((skill) => (
@@ -166,14 +232,14 @@ function CatalogPageInner() {
                 href="/skills"
                 className="card-link"
               >
-                <h3 className="font-medium">{skill.name}</h3>
+                <h3 className="heading text-sm">{skill.name}</h3>
                 {skill.description && (
-                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                  <p className="mt-1.5 text-sm" style={{ color: "var(--color-muted)" }}>
                     {skill.description}
                   </p>
                 )}
                 {skill.path && (
-                  <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                  <p className="mt-1.5" style={{ color: "var(--color-muted-3)", fontFamily: "var(--font-mono)", fontSize: "11px" }}>
                     {skill.path}
                   </p>
                 )}
@@ -196,19 +262,28 @@ function CatalogPageInner() {
 }
 
 function Section({
+  id,
   title,
+  count,
   loading,
   children,
 }: {
+  id: string;
   title: string;
+  count: number | undefined;
   loading: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section>
+    <section id={id} className="scroll-mt-28">
       <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {loading && <span className="text-xs" style={{ color: "var(--muted)" }}>loading…</span>}
+        <h2 className="heading text-lg">{title}</h2>
+        {typeof count === "number" && (
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-muted-3)" }}>
+            {count}
+          </span>
+        )}
+        {loading && <span className="text-xs" style={{ color: "var(--color-muted)" }}>loading…</span>}
       </div>
       {children}
     </section>
@@ -221,9 +296,9 @@ function Grid({ children }: { children: React.ReactNode }) {
 
 function Empty({ label, href, cta }: { label: string; href: string; cta: string }) {
   return (
-    <div className="surface rounded-lg px-4 py-6 text-center text-sm" style={{ color: "var(--muted)" }}>
+    <div className="surface rounded-[var(--radius-lg)] px-4 py-6 text-center text-sm" style={{ color: "var(--color-muted)" }}>
       <p>{label}</p>
-      <Link href={href} className="mt-2 inline-block" style={{ color: "var(--accent)" }}>
+      <Link href={href} className="mt-2 inline-block font-medium" style={{ color: "var(--color-primary)" }}>
         {cta} →
       </Link>
     </div>

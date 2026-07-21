@@ -1,8 +1,12 @@
 export function ErrorBanner({ message }: { message: string }) {
   return (
     <div
-      className="surface rounded-md border-l-4 px-4 py-3 text-sm"
-      style={{ borderLeftColor: "var(--danger)", color: "var(--danger)" }}
+      className="rounded-[var(--radius-md)] bg-white px-4 py-3 text-sm"
+      style={{
+        color: "var(--color-danger)",
+        border: "1px solid var(--color-border)",
+        borderLeft: "4px solid var(--color-danger)",
+      }}
     >
       {message}
     </div>

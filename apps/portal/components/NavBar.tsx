@@ -3,40 +3,54 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
-  { href: "/", label: "Catalog" },
-  { href: "/agents/new", label: "Agents: new" },
-  { href: "/mcp-servers/new", label: "MCP Servers: new" },
-  { href: "/model-configs", label: "Model Configs" },
-  { href: "/skills", label: "Skills" },
+// "Agents" and "MCP Servers" don't have dedicated list pages — they live as
+// sections on the catalog home — so their tabs jump to that section via a
+// hash anchor. Skills and Model Configs have real standalone pages.
+const tabs: { href: string; label: string; match: (pathname: string) => boolean }[] = [
+  {
+    href: "/#agents",
+    label: "Agents",
+    match: (p) => p === "/" || p.startsWith("/agents"),
+  },
+  {
+    href: "/#mcp-servers",
+    label: "MCP Servers",
+    match: (p) => p.startsWith("/mcp-servers"),
+  },
+  { href: "/skills", label: "Skills", match: (p) => p.startsWith("/skills") },
+  {
+    href: "/model-configs",
+    label: "Model Configs",
+    match: (p) => p.startsWith("/model-configs"),
+  },
 ];
 
 export function NavBar() {
   const pathname = usePathname();
 
   return (
-    <header className="surface border-b" style={{ borderColor: "var(--border)" }}>
-      <nav className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
-        <Link href="/" className="font-semibold tracking-tight">
-          Agents Platform
+    <div className="sticky top-0 z-40">
+      <header className="top-bar">
+        <Link href="/" className="brand">
+          <span className="brand-mark">
+            <span className="brand-mark-dot" />
+          </span>
+          <span className="brand-name">Open Agents</span>
         </Link>
-        <div className="flex gap-4 text-sm">
-          {links.map((link) => {
-            const active =
-              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={active ? "font-medium" : ""}
-                style={{ color: active ? "var(--accent)" : "var(--muted)" }}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
+        <div className="flex-1" />
+        <span className="avatar-circle" aria-hidden="true" />
+      </header>
+      <nav className="tab-nav">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={tab.href}
+            className={`tab-link ${tab.match(pathname) ? "tab-link-active" : ""}`}
+          >
+            {tab.label}
+          </Link>
+        ))}
       </nav>
-    </header>
+    </div>
   );
 }

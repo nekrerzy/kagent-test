@@ -85,54 +85,44 @@ export default function SkillsPage() {
   return (
     <div className="flex flex-col gap-10">
       <div>
-        <h1 className="mb-6 text-xl font-semibold">Skills</h1>
+        <h1 className="heading mb-6 text-xl">Skills</h1>
         {error && <ErrorBanner message={error} />}
-        {loading && <p style={{ color: "var(--muted)" }}>Loading…</p>}
+        {loading && <p style={{ color: "var(--color-muted)" }}>Loading…</p>}
         {skills?.length === 0 && !loading && (
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
             No skills yet.
           </p>
         )}
         {skills && skills.length > 0 && (
-          <div className="surface overflow-x-auto rounded-md">
-            <table className="w-full text-left text-sm">
+          <div className="table-shell overflow-x-auto">
+            <table>
               <thead>
-                <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                  <th className="px-3 py-2 font-medium">Name</th>
-                  <th className="px-3 py-2 font-medium">Source</th>
-                  <th className="px-3 py-2 font-medium">Path</th>
-                  <th className="px-3 py-2 font-medium">Ref</th>
-                  <th className="px-3 py-2 font-medium">Description</th>
-                  <th className="px-3 py-2 font-medium">Tags</th>
-                  <th className="px-3 py-2" />
+                <tr>
+                  <th>Name</th>
+                  <th>Source</th>
+                  <th>Path</th>
+                  <th>Ref</th>
+                  <th>Description</th>
+                  <th>Tags</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
                 {skills.map((skill) => (
-                  <tr
-                    key={`${skill.namespace}/${skill.name}`}
-                    className="border-b last:border-0"
-                    style={{ borderColor: "var(--border)" }}
-                  >
-                    <td className="px-3 py-2">{skill.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs">
+                  <tr key={`${skill.namespace}/${skill.name}`}>
+                    <td className="name-mono">{skill.name}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                       {skill.url ?? skill.image}
-                      {skill.image && (
-                        <span className="ml-1" style={{ color: "var(--muted)" }}>
-                          (uploaded)
-                        </span>
-                      )}
+                      {skill.image && <span className="chip-uploaded ml-1.5">uploaded</span>}
                     </td>
-                    <td className="px-3 py-2 text-xs" style={{ color: "var(--muted)" }}>
+                    <td style={{ color: "var(--color-muted)", fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                       {skill.path ?? "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs" style={{ color: "var(--muted)" }}>
+                    <td style={{ color: "var(--color-muted)", fontFamily: "var(--font-mono)", fontSize: "12px" }}>
                       {skill.ref ?? "—"}
                     </td>
-                    <td className="px-3 py-2 text-xs" style={{ color: "var(--muted)" }}>
-                      {skill.description ?? "—"}
-                    </td>
-                    <td className="px-3 py-2">
+                    <td style={{ color: "var(--color-muted)" }}>{skill.description ?? "—"}</td>
+                    <td>
                       {skill.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {skill.tags.map((tag) => (
@@ -141,7 +131,7 @@ export default function SkillsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="text-right">
                       <ConfirmButton
                         label="Delete"
                         confirmMessage={`Delete skill "${skill.name}"? This cannot be undone.`}
@@ -163,141 +153,147 @@ export default function SkillsPage() {
         )}
       </div>
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Upload skill (zip)</h2>
-        <p className="mb-3 max-w-2xl text-sm" style={{ color: "var(--muted)" }}>
-          Zip a skill folder — a SKILL.md at the top plus any scripts and
-          resources, subfolders included — and upload it. It is stored as an
-          image in the platform registry; no git repo needed.
-        </p>
-        <form onSubmit={handleUpload} className="flex max-w-2xl flex-col gap-5">
-          <div>
-            <label className="field-label" htmlFor="zip-name">
-              Name
-            </label>
-            <input
-              id="zip-name"
-              required
-              value={zipName}
-              onChange={(e) => setZipName(slugifyName(e.target.value))}
-              className="field-input"
-            />
-          </div>
-          <div>
-            <label className="field-label" htmlFor="zip-file">
-              Zip file
-            </label>
-            <input
-              id="zip-file"
-              type="file"
-              required
-              accept=".zip,application/zip"
-              onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-              className="field-input"
-            />
-          </div>
-          <div>
-            <label className="field-label" htmlFor="zip-description">
-              Description
-            </label>
-            <input
-              id="zip-description"
-              value={zipDescription}
-              onChange={(e) => setZipDescription(e.target.value)}
-              className="field-input"
-            />
-          </div>
-          <div>
-            <label className="field-label">Tags</label>
-            <TagsInput value={zipTags} onChange={setZipTags} />
-          </div>
-          <div className="flex gap-2">
-            <button type="submit" className="btn-primary" disabled={uploading || !zipFile}>
-              {uploading ? "Uploading…" : "Upload skill"}
-            </button>
-          </div>
-        </form>
-      </div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div>
+          <h2 className="heading mb-2 text-lg">Upload skill (zip)</h2>
+          <p className="mb-3 text-sm" style={{ color: "var(--color-muted)" }}>
+            Zip a skill folder — a SKILL.md at the top plus any scripts and
+            resources, subfolders included — and upload it. It is stored as an
+            image in the platform registry; no git repo needed.
+          </p>
+          <form onSubmit={handleUpload} className="panel flex flex-col gap-5">
+            <div>
+              <label className="field-label" htmlFor="zip-name">
+                Name
+              </label>
+              <input
+                id="zip-name"
+                required
+                value={zipName}
+                onChange={(e) => setZipName(slugifyName(e.target.value))}
+                className="field-input font-mono"
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="zip-file">
+                Zip file
+              </label>
+              <input
+                id="zip-file"
+                type="file"
+                required
+                accept=".zip,application/zip"
+                onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
+                className="field-input"
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="zip-description">
+                Description
+              </label>
+              <input
+                id="zip-description"
+                value={zipDescription}
+                onChange={(e) => setZipDescription(e.target.value)}
+                className="field-input"
+              />
+            </div>
+            <div>
+              <label className="field-label">Tags</label>
+              <TagsInput value={zipTags} onChange={setZipTags} />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary" disabled={uploading || !zipFile}>
+                {uploading ? "Uploading…" : "Upload skill"}
+              </button>
+            </div>
+          </form>
+        </div>
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">New skill from git</h2>
-        <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-5">
-          <div>
-            <label className="field-label" htmlFor="name">
-              Name
-            </label>
-            <input
-              id="name"
-              required
-              value={name}
-              onChange={(e) => setName(slugifyName(e.target.value))}
-              className="field-input"
-            />
-          </div>
+        <div>
+          <h2 className="heading mb-2 text-lg">New skill from git</h2>
+          <p className="mb-3 text-sm" style={{ color: "var(--color-muted)" }}>
+            Point at a git repo — optionally a subpath and ref — to register a
+            skill that lives outside the platform.
+          </p>
+          <form onSubmit={handleSubmit} className="panel flex flex-col gap-5">
+            <div>
+              <label className="field-label" htmlFor="name">
+                Name
+              </label>
+              <input
+                id="name"
+                required
+                value={name}
+                onChange={(e) => setName(slugifyName(e.target.value))}
+                className="field-input font-mono"
+              />
+            </div>
 
-          <div>
-            <label className="field-label" htmlFor="url">
-              Git URL
-            </label>
-            <input
-              id="url"
-              required
-              placeholder="https://github.com/org/repo"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="field-input"
-            />
-          </div>
+            <div>
+              <label className="field-label" htmlFor="url">
+                Git URL
+              </label>
+              <input
+                id="url"
+                required
+                placeholder="https://github.com/org/repo"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="field-input font-mono"
+              />
+            </div>
 
-          <div>
-            <label className="field-label" htmlFor="path">
-              Path
-            </label>
-            <input
-              id="path"
-              placeholder="skills/my-skill"
-              value={path}
-              onChange={(e) => setPath(e.target.value)}
-              className="field-input"
-            />
-          </div>
+            <div>
+              <label className="field-label" htmlFor="path">
+                Path
+              </label>
+              <input
+                id="path"
+                placeholder="skills/my-skill"
+                value={path}
+                onChange={(e) => setPath(e.target.value)}
+                className="field-input font-mono"
+              />
+            </div>
 
-          <div>
-            <label className="field-label" htmlFor="ref">
-              Ref
-            </label>
-            <input
-              id="ref"
-              placeholder="main"
-              value={ref}
-              onChange={(e) => setRef(e.target.value)}
-              className="field-input"
-            />
-          </div>
+            <div>
+              <label className="field-label" htmlFor="ref">
+                Ref
+              </label>
+              <input
+                id="ref"
+                placeholder="main"
+                value={ref}
+                onChange={(e) => setRef(e.target.value)}
+                className="field-input font-mono"
+              />
+            </div>
 
-          <div>
-            <label className="field-label" htmlFor="description">
-              Description
-            </label>
-            <input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="field-input"
-            />
-          </div>
+            <div>
+              <label className="field-label" htmlFor="description">
+                Description
+              </label>
+              <input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="field-input"
+              />
+            </div>
 
-          <div>
-            <label className="field-label">Tags</label>
-            <TagsInput value={tags} onChange={setTags} />
-          </div>
+            <div>
+              <label className="field-label">Tags</label>
+              <TagsInput value={tags} onChange={setTags} />
+            </div>
 
-          <div className="flex gap-2">
-            <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting ? "Creating…" : "Create skill"}
-            </button>
-          </div>
-        </form>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary" disabled={submitting}>
+                {submitting ? "Creating…" : "Create skill"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
