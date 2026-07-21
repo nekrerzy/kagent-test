@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { getAgent } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -12,5 +13,9 @@ export function AgentEditLoader({ namespace, name }: { namespace: string; name: 
   if (error) return <ErrorBanner message={error} />;
   if (!agent) return null;
 
-  return <AgentForm mode="edit" namespace={namespace} initial={agent} />;
+  return (
+    <Suspense>
+      <AgentForm mode="edit" namespace={namespace} initial={agent} />
+    </Suspense>
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ApiError,
   AgentIn,
@@ -66,14 +66,22 @@ function initToolScopes(tools: ToolRef[]): Record<string, Record<string, ToolSco
 
 export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showError } = useToast();
   const { namespace: envNamespace } = useEnvironment();
 
+  // Quick mode's Platform Agent prompt hands off here via `?seed=`, prefilling
+  // the description and starting instructions — only on creation, and only
+  // as the initial (pristine) value, never overwriting an edit in progress.
+  const seed = mode === "new" ? searchParams.get("seed") : null;
+
   const [type, setType] = useState<AgentType>(initial?.type ?? "Declarative");
   const [name, setName] = useState(initial?.name ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
+  const [description, setDescription] = useState(initial?.description ?? seed ?? "");
   const [image, setImage] = useState(initial?.image ?? "");
-  const [systemMessage, setSystemMessage] = useState(initial?.system_message ?? "");
+  const [systemMessage, setSystemMessage] = useState(
+    initial?.system_message ?? (seed ? `You are ${seed}` : ""),
+  );
   const [modelConfig, setModelConfig] = useState(initial?.model_config ?? "");
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [submitting, setSubmitting] = useState(false);

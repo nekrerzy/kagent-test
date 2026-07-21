@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getCatalog } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { useEnvironment } from "@/lib/environment";
+import { useMode } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ReadyBadge, Tag } from "@/components/Badge";
+import { QuickHome } from "@/components/QuickHome";
 
 function CatalogPageInner() {
   const router = useRouter();
@@ -16,6 +18,7 @@ function CatalogPageInner() {
   const [draft, setDraft] = useState(q);
   const searchRef = useRef<HTMLInputElement>(null);
   const { namespace } = useEnvironment();
+  const { mode } = useMode();
 
   const { data, error, loading } = useApi(
     () => getCatalog(q || undefined, namespace),
@@ -41,6 +44,13 @@ function CatalogPageInner() {
     if (draft) params.set("q", draft);
     router.push(params.size ? `/?${params}` : "/");
   };
+
+  // Quick mode is one calm screen — the Platform Agent prompt plus a
+  // segmented Agents/MCP/Skills switcher — sharing this same getCatalog
+  // call rather than fetching twice.
+  if (mode === "quick") {
+    return <QuickHome data={data} loading={loading} />;
+  }
 
   return (
     <div className="flex flex-col gap-10">

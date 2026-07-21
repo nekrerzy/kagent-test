@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavBar } from "@/components/NavBar";
 import { ToastProvider } from "@/components/Toast";
 import { EnvironmentProvider } from "@/lib/environment";
+import { ModeProvider } from "@/lib/mode";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -45,10 +46,12 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <EnvironmentProvider>
-          <ToastProvider>
-            <NavBar />
-            <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
-          </ToastProvider>
+          <ModeProvider>
+            <ToastProvider>
+              <NavBar />
+              <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+            </ToastProvider>
+          </ModeProvider>
         </EnvironmentProvider>
       </body>
     </html>

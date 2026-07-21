@@ -13,7 +13,10 @@
   --color-surface: #ffffff;
   --color-pill: #eef3f2;
   --color-tint: #e4f2f0;
+  --color-tint-dashed: #f0f8f7;
   --color-input-bg: #f2f6f5;
+  --color-muted-4: #8ba09b;
+  --color-icon-muted: #a9bbb7;
   --color-success: #1fa85a;
   --color-warning: #e0912a;
   --color-info: #3aa0d6;
@@ -559,5 +562,313 @@ body {
     50% {
       opacity: 1;
     }
+  }
+
+  /* ---- quick/pro mode toggle ---- */
+
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--color-pill);
+    border-radius: 9px;
+    padding: 3px;
+    flex: none;
+  }
+
+  .mode-pill {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 12.5px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    color: var(--color-muted-2);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .mode-pill-active-light {
+    font-weight: 600;
+    color: var(--color-ink);
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+
+  .mode-pill-active-dark {
+    font-weight: 600;
+    color: #fff;
+    background: var(--color-ink);
+  }
+
+  /* ---- quick mode home ---- */
+
+  .quick-hero {
+    padding: 54px 40px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(130% 100% at 50% -10%, #dff0ee 0%, var(--color-bg) 55%);
+  }
+
+  .quick-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--color-primary);
+    margin-bottom: 16px;
+  }
+
+  .quick-eyebrow-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    flex: none;
+  }
+
+  .quick-headline {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 34px;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    max-width: 600px;
+    color: var(--color-ink);
+  }
+
+  .quick-prompt-card {
+    margin-top: 26px;
+    width: 100%;
+    max-width: 660px;
+    background: #fff;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(10, 60, 55, 0.1);
+    padding: 18px 18px 13px;
+    text-align: left;
+  }
+
+  .quick-prompt-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 15px;
+    color: var(--color-ink);
+    line-height: 1.4;
+  }
+
+  .quick-prompt-textarea::placeholder {
+    color: var(--color-muted-4);
+  }
+
+  .quick-prompt-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .quick-chip-btn {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--color-muted-4);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 7px;
+    padding: 5px 9px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .quick-chip-btn:hover {
+    color: var(--color-primary-hover);
+    border-color: var(--color-primary);
+  }
+
+  .quick-send-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    flex: none;
+  }
+
+  .quick-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* segmented switcher (Agents / MCP / Skills) */
+
+  .segmented {
+    display: flex;
+    background: var(--color-pill);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .segmented-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 12.5px;
+    padding: 7px 16px;
+    border-radius: 7px;
+    color: var(--color-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .segmented-tab-active {
+    font-weight: 600;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    color: var(--color-ink);
+  }
+
+  .segmented-tab-count {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--color-muted-2);
+  }
+
+  .segmented-icon-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    flex: none;
+  }
+
+  .segmented-icon-diamond {
+    width: 8px;
+    height: 8px;
+    background: var(--color-icon-muted);
+    transform: rotate(45deg);
+    flex: none;
+  }
+
+  .segmented-icon-square {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--color-icon-muted);
+    flex: none;
+  }
+
+  .segmented-view-all {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--color-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* quick mode card grid */
+
+  .quick-card {
+    border: 1px solid var(--color-border);
+    border-radius: 13px;
+    background: #fff;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .quick-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 18px rgba(10, 60, 55, 0.06);
+  }
+
+  .quick-card-title {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+
+  .quick-card-desc {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .quick-card-chip {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 11px;
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  .quick-card-chip-tint {
+    background: var(--color-tint);
+    color: var(--color-primary-hover);
+  }
+
+  .quick-card-chip-muted {
+    background: var(--color-pill);
+    color: var(--color-muted);
+  }
+
+  .quick-card-new {
+    border: 1.5px dashed rgba(18, 140, 130, 0.4);
+    border-radius: 13px;
+    background: var(--color-tint-dashed);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: var(--color-primary-hover);
+    text-decoration: none;
+    min-height: 104px;
+  }
+
+  .quick-card-new-icon {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+
+  .quick-card-new-label {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
   }
 }
