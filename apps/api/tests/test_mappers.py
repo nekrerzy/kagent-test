@@ -134,7 +134,7 @@ def test_model_config_round_trip_with_api_key():
     assert crd["kind"] == "ModelConfig"
     assert crd["spec"]["model"] == "qwen3.6-35b-a3b"
     assert crd["spec"]["provider"] == "OpenAI"
-    assert crd["spec"]["apiKeySecretRef"] == "default-model-config-apikey"
+    assert crd["spec"]["apiKeySecret"] == "default-model-config-apikey"
     assert crd["spec"]["apiKeySecretKey"] == "apiKey"
     assert crd["spec"]["openAI"] == {"baseUrl": "http://10.20.0.1:9292/v1"}
     # api_key itself must never appear in the CRD dict.
@@ -153,7 +153,7 @@ def test_model_config_round_trip_with_api_key():
 def test_model_config_without_api_key_has_no_secret_ref():
     mc_in = ModelConfigIn(name="x", model="m")
     crd = mappers.model_config_to_crd(mc_in, namespace="kagent")
-    assert "apiKeySecretRef" not in crd["spec"]
+    assert "apiKeySecret" not in crd["spec"]
     assert "apiKeySecretKey" not in crd["spec"]
 
 

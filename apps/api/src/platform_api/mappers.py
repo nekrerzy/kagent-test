@@ -11,7 +11,10 @@ CRD field names verified 2026-07-20:
     infra-level apply issue, not a schema question) so this is the best
     available ground truth; see the implementation report for detail.
   - ModelConfig, RemoteMCPServer: verified directly against `kubectl get crd
-    <name> -o json` on the live cluster.
+    <name> -o json` on the live cluster. CAUTION: these CRDs serve BOTH
+    v1alpha1 and v1alpha2, and field names differ between them (v1alpha1
+    `apiKeySecretRef` vs v1alpha2 `apiKeySecret`) — always read the schema of
+    the version this module writes (v1alpha2), not `versions[0]`.
 """
 
 from __future__ import annotations
@@ -186,7 +189,7 @@ def model_config_to_crd(mc: ModelConfigIn, namespace: str) -> dict[str, Any]:
     spec: dict[str, Any] = {"model": mc.model, "provider": mc.provider}
 
     if mc.api_key is not None:
-        spec["apiKeySecretRef"] = model_config_secret_name(mc.name)
+        spec["apiKeySecret"] = model_config_secret_name(mc.name)
         spec["apiKeySecretKey"] = API_KEY_SECRET_KEY
 
     # Only OpenAI's provider-specific config is wired through baseUrl for now —

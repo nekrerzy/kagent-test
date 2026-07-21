@@ -8,6 +8,7 @@ it and tests can override it with an in-memory fake.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from fastapi import HTTPException
@@ -39,7 +40,16 @@ def _map_api_exception(exc: ApiException) -> HTTPException:
         return HTTPException(status_code=404, detail="resource not found")
     if exc.status == 409:
         return HTTPException(status_code=409, detail="resource conflict")
-    return HTTPException(status_code=exc.status or 500, detail=exc.reason or "kubernetes API error")
+    # Surface the Kubernetes message (e.g. CRD schema rejections, RBAC denials)
+    # instead of just the bare reason — clients can't act on "Forbidden".
+    detail = exc.reason or "kubernetes API error"
+    try:
+        message = json.loads(exc.body or "{}").get("message")
+        if message:
+            detail = f"{detail}: {message}"
+    except (ValueError, AttributeError):
+        pass
+    return HTTPException(status_code=exc.status or 500, detail=detail)
 
 
 class K8sClient:
