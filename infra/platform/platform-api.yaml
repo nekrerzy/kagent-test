@@ -1,0 +1,121 @@
+# Platform API — Phase 1. Image comes from the local homelab registry
+# (10.20.0.1:5050, plain HTTP; Talos nodes trust it via a registry-mirror
+# machine-config patch — see docs/phase-0.md).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: platform-api
+  namespace: platform
+---
+# RBAC lives in the kagent namespace: the API manages catalog CRDs there and
+# creates Secrets for model API keys. Deliberately namespace-scoped (not
+# cluster-wide) — all catalog objects live in the kagent namespace for MVP.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: platform-api
+  namespace: kagent
+rules:
+  - apiGroups: ["kagent.dev"]
+    resources: ["agents", "modelconfigs", "remotemcpservers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: platform-api
+  namespace: kagent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: platform-api
+subjects:
+  - kind: ServiceAccount
+    name: platform-api
+    namespace: platform
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-api
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-api
+  template:
+    metadata:
+      labels:
+        app: platform-api
+    spec:
+      serviceAccountName: platform-api
+      containers:
+        - name: api
+          image: 10.20.0.1:5050/platform-api:dev
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PLATFORM_KAGENT_API_BASE
+              value: "http://kagent-controller.kagent.svc.cluster.local:8083"
+            - name: PLATFORM_DEFAULT_NAMESPACE
+              value: "kagent"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-api
+  namespace: platform
+spec:
+  selector:
+    app: platform-api
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+# Exposed on the existing Envoy homelab-gateway (10.20.0.100). sslip.io echoes
+# the embedded IP back as the DNS answer, so no /etc/hosts entries are needed.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: platform-api
+  namespace: platform
+spec:
+  parentRefs:
+    - name: homelab-gateway
+      namespace: envoy-gateway-system
+  hostnames:
+    - api.10.20.0.100.sslip.io
+  rules:
+    - backendRefs:
+        - name: platform-api
+          port: 80
