@@ -12,7 +12,7 @@ def test_agent_round_trip_minimal():
     assert crd["spec"]["type"] == "Declarative"
     assert crd["spec"]["declarative"]["systemMessage"] == "You are helpful."
     assert "tools" not in crd["spec"]["declarative"]
-    assert "modelConfig" not in crd["spec"]["declarative"]
+    assert crd["spec"]["declarative"]["modelConfig"] == "default-model-config"
 
     crd["status"] = {}
     out = mappers.agent_from_crd(
