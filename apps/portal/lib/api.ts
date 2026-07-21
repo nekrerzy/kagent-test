@@ -44,6 +44,7 @@ export type ModelProvider =
 export interface ToolRef {
   mcp_server: string;
   tool_names?: string[] | null;
+  require_approval?: string[] | null;
 }
 
 export type AgentType = "Declarative" | "BYO";
@@ -72,6 +73,8 @@ export interface AgentIn {
 export interface AgentOut extends AgentIn {
   ready: boolean | null;
   a2a_url: string | null;
+  version: number | null;
+  runs: number | null;
 }
 
 export interface McpServerIn {
@@ -81,6 +84,8 @@ export interface McpServerIn {
   url: string;
   protocol: Protocol;
   tags: string[];
+  auth_header?: string | null;
+  auth_value?: string | null;
 }
 
 export interface DiscoveredTool {
@@ -124,6 +129,25 @@ export interface SkillIn {
 
 export interface SkillOut extends SkillIn {
   namespace: string;
+}
+
+export interface SkillAuthorIn {
+  name: string;
+  namespace?: string | null;
+  skill_md: string;
+  description?: string | null;
+  tags: string[];
+}
+
+export interface SkillContentOut {
+  skill_md: string;
+  files: string[];
+  versions: string[];
+}
+
+export interface EnvironmentOut {
+  name: string;
+  default: boolean;
 }
 
 export interface CatalogOut {
@@ -192,17 +216,39 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 const json = (body: unknown) => JSON.stringify(body);
 
+// Builds a query string from the given params, dropping empty/undefined values.
+function buildQuery(params: Record<string, string | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value) qs.set(key, value);
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+
+// ---- environments -----------------------------------------------------
+
+export function listEnvironments(): Promise<EnvironmentOut[]> {
+  return request<EnvironmentOut[]>("/v1/environments");
+}
+
+export function createEnvironment(input: { name: string }): Promise<EnvironmentOut> {
+  return request<EnvironmentOut>("/v1/environments", {
+    method: "POST",
+    body: json(input),
+  });
+}
+
 // ---- catalog --------------------------------------------------------------
 
-export function getCatalog(q?: string): Promise<CatalogOut> {
-  const qs = q ? `?q=${encodeURIComponent(q)}` : "";
-  return request<CatalogOut>(`/v1/catalog${qs}`);
+export function getCatalog(q?: string, namespace?: string): Promise<CatalogOut> {
+  return request<CatalogOut>(`/v1/catalog${buildQuery({ q, namespace })}`);
 }
 
 // ---- agents -----------------------------------------------------------
 
-export function listAgents(): Promise<AgentOut[]> {
-  return request<AgentOut[]>("/v1/agents");
+export function listAgents(namespace?: string): Promise<AgentOut[]> {
+  return request<AgentOut[]>(`/v1/agents${buildQuery({ namespace })}`);
 }
 
 export function getAgent(ns: string, name: string): Promise<AgentOut> {
@@ -314,8 +360,8 @@ export async function streamAgent(
 
 // ---- mcp servers --------------------------------------------------------
 
-export function listMcpServers(): Promise<McpServerOut[]> {
-  return request<McpServerOut[]>("/v1/mcp-servers");
+export function listMcpServers(namespace?: string): Promise<McpServerOut[]> {
+  return request<McpServerOut[]>(`/v1/mcp-servers${buildQuery({ namespace })}`);
 }
 
 export function getMcpServer(ns: string, name: string): Promise<McpServerOut> {
@@ -331,6 +377,8 @@ export interface McpProbeOut {
 export function validateMcpServer(input: {
   url: string;
   protocol: Protocol;
+  auth_header?: string | null;
+  auth_value?: string | null;
 }): Promise<McpProbeOut> {
   return request<McpProbeOut>("/v1/mcp-servers/validate", {
     method: "POST",
@@ -362,8 +410,8 @@ export function deleteMcpServer(ns: string, name: string): Promise<void> {
 
 // ---- model configs ------------------------------------------------------
 
-export function listModelConfigs(): Promise<ModelConfigOut[]> {
-  return request<ModelConfigOut[]>("/v1/model-configs");
+export function listModelConfigs(namespace?: string): Promise<ModelConfigOut[]> {
+  return request<ModelConfigOut[]>(`/v1/model-configs${buildQuery({ namespace })}`);
 }
 
 export function getModelConfig(
@@ -390,12 +438,23 @@ export function deleteModelConfig(ns: string, name: string): Promise<void> {
 
 // ---- skills ---------------------------------------------------------------
 
-export function listSkills(): Promise<SkillOut[]> {
-  return request<SkillOut[]>("/v1/skills");
+export function listSkills(namespace?: string): Promise<SkillOut[]> {
+  return request<SkillOut[]>(`/v1/skills${buildQuery({ namespace })}`);
 }
 
 export function getSkill(ns: string, name: string): Promise<SkillOut> {
   return request<SkillOut>(`/v1/skills/${ns}/${name}`);
+}
+
+export function getSkillContent(ns: string, name: string): Promise<SkillContentOut> {
+  return request<SkillContentOut>(`/v1/skills/${ns}/${name}/content`);
+}
+
+export function authorSkill(input: SkillAuthorIn): Promise<SkillOut> {
+  return request<SkillOut>("/v1/skills/author", {
+    method: "POST",
+    body: json(input),
+  });
 }
 
 export async function uploadSkill(
@@ -403,12 +462,14 @@ export async function uploadSkill(
   file: File,
   description?: string,
   tags?: string[],
+  namespace?: string,
 ): Promise<SkillOut> {
   const form = new FormData();
   form.set("name", name);
   form.set("file", file);
   if (description) form.set("description", description);
   if (tags?.length) form.set("tags", tags.join(","));
+  if (namespace) form.set("namespace", namespace);
   let res: Response;
   try {
     res = await fetch(`${API_BASE}/v1/skills/upload`, { method: "POST", body: form });

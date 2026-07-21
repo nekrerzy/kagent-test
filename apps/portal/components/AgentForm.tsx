@@ -7,7 +7,9 @@ import {
   AgentIn,
   AgentOut,
   AgentType,
+  McpServerOut,
   SkillRef,
+  ToolRef,
   createAgent,
   listMcpServers,
   listModelConfigs,
@@ -16,6 +18,7 @@ import {
   slugifyName,
 } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { useEnvironment } from "@/lib/environment";
 import { useToast } from "@/components/Toast";
 import { TagsInput } from "@/components/TagsInput";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -31,9 +34,40 @@ interface AgentFormProps {
 const skillKey = (s: { url?: string | null; image?: string | null; path?: string | null }) =>
   s.image ? `img::${s.image}` : `${s.url ?? ""}::${s.path ?? ""}`;
 
+// Per-tool permission scope: deny (not attached), allow (attached, no
+// approval needed), ask (attached, requires human approval before running).
+type ToolScope = "allow" | "ask" | "deny";
+
+const ALL_TOOLS_SENTINEL = "__all__";
+
+// server name -> tool name -> scope, seeded from the agent's existing
+// tool_names/require_approval. A server with no tools at any non-deny scope
+// is simply omitted from the submitted `tools` array.
+function initToolScopes(tools: ToolRef[]): Record<string, Record<string, ToolScope>> {
+  const seed: Record<string, Record<string, ToolScope>> = {};
+  for (const tool of tools) {
+    const scopes: Record<string, ToolScope> = {};
+    if (tool.tool_names) {
+      for (const name of tool.tool_names) {
+        scopes[name] = tool.require_approval?.includes(name) ? "ask" : "allow";
+      }
+    } else {
+      // omitted tool_names = every discovered tool allowed; resolved once
+      // the server's discovered_tools are known (see resolvedToolScopes).
+      scopes[ALL_TOOLS_SENTINEL] = "allow";
+      for (const name of tool.require_approval ?? []) {
+        scopes[name] = "ask";
+      }
+    }
+    seed[tool.mcp_server] = scopes;
+  }
+  return seed;
+}
+
 export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
   const router = useRouter();
   const { showError } = useToast();
+  const { namespace: envNamespace } = useEnvironment();
 
   const [type, setType] = useState<AgentType>(initial?.type ?? "Declarative");
   const [name, setName] = useState(initial?.name ?? "");
@@ -45,50 +79,66 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const { data: mcpServers, loading: mcpLoading, error: mcpError } = useApi(
-    listMcpServers,
-    [],
+    () => listMcpServers(envNamespace),
+    [envNamespace],
   );
   const { data: modelConfigs, loading: mcLoading, error: mcError } = useApi(
-    listModelConfigs,
-    [],
+    () => listModelConfigs(envNamespace),
+    [envNamespace],
   );
   const { data: skills, loading: skillsLoading, error: skillsError } = useApi(
-    listSkills,
-    [],
+    () => listSkills(envNamespace),
+    [envNamespace],
   );
 
-  // server name -> set of selected tool names. A server only appears in the
-  // submitted `tools` array if its set is non-empty.
-  const [selection, setSelection] = useState<Record<string, Set<string>>>(() => {
-    const seed: Record<string, Set<string>> = {};
-    for (const tool of initial?.tools ?? []) {
-      seed[tool.mcp_server] = new Set(tool.tool_names ?? ["__all__"]);
-    }
-    return seed;
-  });
+  const [toolScopes, setToolScopes] = useState<Record<string, Record<string, ToolScope>>>(() =>
+    initToolScopes(initial?.tools ?? []),
+  );
 
-  // Resolve the "__all__" seed placeholder once discovered tools are known.
-  const resolvedSelection = useMemo(() => {
-    if (!mcpServers) return selection;
-    const resolved: Record<string, Set<string>> = {};
-    for (const [server, set] of Object.entries(selection)) {
-      if (set.has("__all__")) {
+  // Resolve the "all tools" sentinel once discovered tools are known.
+  const resolvedToolScopes = useMemo(() => {
+    if (!mcpServers) return toolScopes;
+    const resolved: Record<string, Record<string, ToolScope>> = {};
+    for (const [server, scopes] of Object.entries(toolScopes)) {
+      if (ALL_TOOLS_SENTINEL in scopes) {
         const found = mcpServers.find((s) => s.name === server);
-        resolved[server] = new Set(found?.discovered_tools.map((t) => t.name) ?? []);
+        const expanded: Record<string, ToolScope> = {};
+        for (const t of found?.discovered_tools ?? []) {
+          expanded[t.name] = scopes[t.name] === "ask" ? "ask" : "allow";
+        }
+        resolved[server] = expanded;
       } else {
-        resolved[server] = set;
+        resolved[server] = scopes;
       }
     }
     return resolved;
-  }, [selection, mcpServers]);
+  }, [toolScopes, mcpServers]);
 
-  const toggleTool = (server: string, tool: string) => {
-    setSelection((prev) => {
-      const current = new Set(resolvedSelection[server] ?? prev[server] ?? []);
-      if (current.has(tool)) current.delete(tool);
-      else current.add(tool);
+  const getScope = (server: string, tool: string): ToolScope =>
+    resolvedToolScopes[server]?.[tool] ?? "deny";
+
+  const setScope = (server: string, tool: string, scope: ToolScope) => {
+    setToolScopes((prev) => {
+      const current = { ...(resolvedToolScopes[server] ?? prev[server] ?? {}) };
+      current[tool] = scope;
       return { ...prev, [server]: current };
     });
+  };
+
+  // Deny -> not in tool_names. Allow -> in tool_names. Ask -> in tool_names
+  // and require_approval. All-allow -> tool_names omitted entirely.
+  const encodeToolRef = (server: McpServerOut): ToolRef | null => {
+    const scopes = resolvedToolScopes[server.name] ?? {};
+    const allNames = server.discovered_tools.map((t) => t.name);
+    const included = allNames.filter((n) => (scopes[n] ?? "deny") !== "deny");
+    if (included.length === 0) return null;
+    const askFor = included.filter((n) => scopes[n] === "ask");
+    const allAllowed = included.length === allNames.length && askFor.length === 0;
+    return {
+      mcp_server: server.name,
+      tool_names: allAllowed ? undefined : included,
+      require_approval: askFor.length > 0 ? askFor : undefined,
+    };
   };
 
   // Catalog skills the agent is already attached to, keyed by url+path.
@@ -128,17 +178,8 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
       const tools =
         type === "Declarative"
           ? (mcpServers ?? [])
-              .map((server) => {
-                const set = resolvedSelection[server.name];
-                if (!set || set.size === 0) return null;
-                const allNames = server.discovered_tools.map((t) => t.name);
-                const allChecked = allNames.length > 0 && allNames.every((n) => set.has(n));
-                return {
-                  mcp_server: server.name,
-                  tool_names: allChecked ? null : Array.from(set),
-                };
-              })
-              .filter((t): t is NonNullable<typeof t> => t !== null)
+              .map((server) => encodeToolRef(server))
+              .filter((t): t is ToolRef => t !== null)
           : [];
 
       const matchedSkills: SkillRef[] = (skills ?? [])
@@ -161,6 +202,7 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
         tags,
         tools,
         skills: [...matchedSkills, ...unmatchedSkills],
+        ...(mode === "new" ? { namespace: envNamespace } : {}),
         ...(type === "BYO"
           ? { image: image || undefined }
           : { system_message: systemMessage, model_config: modelConfig || undefined }),
@@ -307,21 +349,31 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
                     No discovered tools.
                   </p>
                 ) : (
-                  <div className="flex flex-wrap gap-3">
-                    {server.discovered_tools.map((tool) => (
-                      <label
-                        key={tool.name}
-                        className="flex items-center gap-1.5 text-xs"
-                        style={{ fontFamily: "var(--font-mono)" }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={resolvedSelection[server.name]?.has(tool.name) ?? false}
-                          onChange={() => toggleTool(server.name, tool.name)}
-                        />
-                        {tool.name}
-                      </label>
-                    ))}
+                  <div className="flex flex-col gap-2">
+                    {server.discovered_tools.map((tool) => {
+                      const scope = getScope(server.name, tool.name);
+                      return (
+                        <div key={tool.name} className="flex items-center justify-between gap-3">
+                          <span className="text-xs" style={{ fontFamily: "var(--font-mono)" }}>
+                            {tool.name}
+                          </span>
+                          <div className="scope-toggle">
+                            {(["allow", "ask", "deny"] as ToolScope[]).map((option) => (
+                              <button
+                                key={option}
+                                type="button"
+                                className={`scope-btn ${
+                                  scope === option ? `scope-btn-${option}-active` : ""
+                                }`}
+                                onClick={() => setScope(server.name, tool.name, option)}
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

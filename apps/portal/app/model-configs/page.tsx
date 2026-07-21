@@ -11,6 +11,7 @@ import {
   slugifyName,
 } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { useEnvironment } from "@/lib/environment";
 import { useToast } from "@/components/Toast";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ReadyBadge } from "@/components/Badge";
@@ -28,7 +29,11 @@ const PROVIDERS: ModelProvider[] = [
 
 export default function ModelConfigsPage() {
   const { showError } = useToast();
-  const { data: configs, error, loading, refetch } = useApi(listModelConfigs, []);
+  const { namespace } = useEnvironment();
+  const { data: configs, error, loading, refetch } = useApi(
+    () => listModelConfigs(namespace),
+    [namespace],
+  );
 
   const [name, setName] = useState("");
   const [provider, setProvider] = useState<ModelProvider>("OpenAI");
@@ -43,6 +48,7 @@ export default function ModelConfigsPage() {
     try {
       const input: ModelConfigIn = {
         name,
+        namespace,
         provider,
         model,
         base_url: baseUrl || undefined,

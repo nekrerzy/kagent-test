@@ -42,6 +42,16 @@ export function McpServerDetail({ namespace, name }: { namespace: string; name: 
           )}
           <div className="mt-2 flex items-center gap-2">
             <span className="pill">{server.protocol}</span>
+            <span className="mono-caption" style={{ textTransform: "none" }}>
+              auth:
+            </span>
+            {server.auth_header ? (
+              <span className="pill" style={{ fontFamily: "var(--font-mono)" }}>
+                {server.auth_header}
+              </span>
+            ) : (
+              <span style={{ color: "var(--color-muted-3)" }}>—</span>
+            )}
             <code style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-muted)" }}>
               {server.url}
             </code>

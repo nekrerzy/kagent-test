@@ -5,6 +5,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCatalog } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { useEnvironment } from "@/lib/environment";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ReadyBadge, Tag } from "@/components/Badge";
 
@@ -14,8 +15,12 @@ function CatalogPageInner() {
   const q = searchParams.get("q") ?? "";
   const [draft, setDraft] = useState(q);
   const searchRef = useRef<HTMLInputElement>(null);
+  const { namespace } = useEnvironment();
 
-  const { data, error, loading } = useApi(() => getCatalog(q || undefined), [q]);
+  const { data, error, loading } = useApi(
+    () => getCatalog(q || undefined, namespace),
+    [q, namespace],
+  );
 
   // ⌘K / Ctrl+K focuses the search bar, like the command-bar treatment in
   // the design reference.
@@ -98,6 +103,8 @@ function CatalogPageInner() {
                   <th>Agent</th>
                   <th>Description</th>
                   <th>Tags</th>
+                  <th>Version</th>
+                  <th className="text-right">Runs</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -131,6 +138,12 @@ function CatalogPageInner() {
                         </div>
                       )}
                     </td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: "var(--color-muted)" }}>
+                      {agent.version != null ? `v${agent.version}` : "—"}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: "var(--font-mono)" }}>
+                      {agent.runs != null ? agent.runs : "—"}
+                    </td>
                     <td>
                       <ReadyBadge ready={agent.ready} />
                     </td>
@@ -153,6 +166,7 @@ function CatalogPageInner() {
                   <th>Server</th>
                   <th>Description</th>
                   <th>Protocol</th>
+                  <th>Auth</th>
                   <th>Tools</th>
                   <th>Status</th>
                 </tr>
@@ -180,6 +194,15 @@ function CatalogPageInner() {
                     <td style={{ color: "var(--color-muted)" }}>{server.description || "—"}</td>
                     <td>
                       <span className="pill">{server.protocol}</span>
+                    </td>
+                    <td>
+                      {server.auth_header ? (
+                        <span className="pill" style={{ fontFamily: "var(--font-mono)" }}>
+                          {server.auth_header}
+                        </span>
+                      ) : (
+                        <span style={{ color: "var(--color-muted-3)" }}>—</span>
+                      )}
                     </td>
                     <td style={{ fontFamily: "var(--font-mono)" }}>{server.discovered_tools.length}</td>
                     <td>

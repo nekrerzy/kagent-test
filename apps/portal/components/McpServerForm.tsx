@@ -11,18 +11,22 @@ import {
   slugifyName,
   validateMcpServer,
 } from "@/lib/api";
+import { useEnvironment } from "@/lib/environment";
 import { useToast } from "@/components/Toast";
 import { TagsInput } from "@/components/TagsInput";
 
 export function McpServerForm() {
   const router = useRouter();
   const { showError } = useToast();
+  const { namespace } = useEnvironment();
 
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [protocol, setProtocol] = useState<Protocol>("STREAMABLE_HTTP");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [authHeader, setAuthHeader] = useState("Authorization");
+  const [authValue, setAuthValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [probe, setProbe] = useState<McpProbeOut | null>(null);
@@ -31,7 +35,14 @@ export function McpServerForm() {
     setTesting(true);
     setProbe(null);
     try {
-      setProbe(await validateMcpServer({ url, protocol }));
+      setProbe(
+        await validateMcpServer({
+          url,
+          protocol,
+          auth_header: authValue ? authHeader || "Authorization" : undefined,
+          auth_value: authValue || undefined,
+        }),
+      );
     } catch (err) {
       showError(err instanceof ApiError ? err.message : "Connection test failed");
     } finally {
@@ -45,10 +56,13 @@ export function McpServerForm() {
     try {
       const input: McpServerIn = {
         name,
+        namespace,
         url,
         protocol,
         description: description || undefined,
         tags,
+        auth_header: authValue ? authHeader || "Authorization" : undefined,
+        auth_value: authValue || undefined,
       };
       const result = await createMcpServer(input);
       router.push(`/mcp-servers/${result.namespace}/${result.name}`);
@@ -121,6 +135,38 @@ export function McpServerForm() {
         <div>
           <label className="field-label">Tags</label>
           <TagsInput value={tags} onChange={setTags} />
+        </div>
+      </div>
+
+      <div className="panel flex flex-col gap-4">
+        <span className="mono-caption">Authentication (optional)</span>
+        <div>
+          <label className="field-label" htmlFor="auth-header">
+            Header name
+          </label>
+          <input
+            id="auth-header"
+            placeholder="Authorization"
+            value={authHeader}
+            onChange={(e) => setAuthHeader(e.target.value)}
+            className="field-input font-mono"
+          />
+        </div>
+        <div>
+          <label className="field-label" htmlFor="auth-value">
+            Value
+          </label>
+          <input
+            id="auth-value"
+            type="password"
+            autoComplete="off"
+            value={authValue}
+            onChange={(e) => setAuthValue(e.target.value)}
+            className="field-input"
+          />
+          <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
+            Stored as a cluster Secret, never shown again.
+          </p>
         </div>
       </div>
 

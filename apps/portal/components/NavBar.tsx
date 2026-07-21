@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEnvironment } from "@/lib/environment";
+import { useToast } from "@/components/Toast";
+import { ApiError } from "@/lib/api";
 
 // "Agents" and "MCP Servers" don't have dedicated list pages — they live as
 // sections on the catalog home — so their tabs jump to that section via a
@@ -25,6 +28,41 @@ const tabs: { href: string; label: string; match: (pathname: string) => boolean 
   },
 ];
 
+function EnvSwitcher() {
+  const { namespace, environments, setNamespace, addEnvironment } = useEnvironment();
+  const { showError } = useToast();
+
+  const options = environments.length > 0 ? environments.map((e) => e.name) : [namespace];
+
+  const handleAdd = async () => {
+    const raw = window.prompt("New environment name");
+    if (!raw) return;
+    try {
+      await addEnvironment(raw);
+    } catch (err) {
+      showError(err instanceof ApiError ? err.message : "Failed to create environment");
+    }
+  };
+
+  return (
+    <div className="env-switcher">
+      {options.map((env) => (
+        <button
+          key={env}
+          type="button"
+          className={`env-pill ${env === namespace ? "env-pill-active" : ""}`}
+          onClick={() => setNamespace(env)}
+        >
+          {env}
+        </button>
+      ))}
+      <button type="button" className="env-pill env-pill-add" onClick={handleAdd}>
+        + env
+      </button>
+    </div>
+  );
+}
+
 export function NavBar() {
   const pathname = usePathname();
 
@@ -38,6 +76,7 @@ export function NavBar() {
           <span className="brand-name">Open Agents</span>
         </Link>
         <div className="flex-1" />
+        <EnvSwitcher />
         <span className="avatar-circle" aria-hidden="true" />
       </header>
       <nav className="tab-nav">

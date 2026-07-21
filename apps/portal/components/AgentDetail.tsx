@@ -28,6 +28,12 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
             <h1 className="heading text-xl">{agent.name}</h1>
             <ReadyBadge ready={agent.ready} />
             <Tag>{agent.type ?? "Declarative"}</Tag>
+            <span className="pill" style={{ fontFamily: "var(--font-mono)" }}>
+              {agent.version != null ? `v${agent.version}` : "v—"}
+            </span>
+            <span className="pill" style={{ fontFamily: "var(--font-mono)" }}>
+              {agent.runs != null ? `${agent.runs} runs` : "— runs"}
+            </span>
           </div>
           {agent.description && (
             <p className="mt-1.5 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -85,13 +91,35 @@ export function AgentDetail({ namespace, name }: { namespace: string; name: stri
                 No tools attached.
               </p>
             ) : (
-              <ul className="flex flex-col gap-1.5 text-sm">
+              <ul className="flex flex-col gap-2 text-sm">
                 {agent.tools.map((t) => (
-                  <li key={t.mcp_server} className="flex items-center gap-2">
-                    <span className="pill pill-tint">{t.mcp_server}</span>
-                    <span style={{ color: "var(--color-muted)" }}>
-                      {t.tool_names ? t.tool_names.join(", ") : "all tools"}
-                    </span>
+                  <li key={t.mcp_server} className="flex flex-col gap-1.5">
+                    <span className="pill pill-tint w-fit">{t.mcp_server}</span>
+                    {t.tool_names ? (
+                      <div className="flex flex-wrap gap-2 pl-1">
+                        {t.tool_names.map((toolName) => (
+                          <span
+                            key={toolName}
+                            className="flex items-center gap-1.5"
+                            style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-muted)" }}
+                          >
+                            {toolName}
+                            {t.require_approval?.includes(toolName) && (
+                              <span
+                                className="pill"
+                                style={{ background: "#faf0e0", color: "var(--color-warning)" }}
+                              >
+                                ask
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="pl-1" style={{ color: "var(--color-muted)" }}>
+                        all tools
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
