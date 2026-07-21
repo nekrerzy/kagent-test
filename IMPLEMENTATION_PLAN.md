@@ -20,7 +20,8 @@ Build an **Agents Platform**: a portal + REST API where developers and regular u
 | GitOps | ArgoCD installed, **zero applications** — free to adopt as the deployment mechanism |
 | Storage | `local-path` (default) — fine for homelab, no HA |
 | kubectl context | `admin@homelab` (note: default context currently points at a stale GKE cluster) |
-| Pod Security | `restricted` PSA enforced (at least in `default`) — all workloads need full securityContext (nonRoot, no privilege escalation, drop ALL caps, RuntimeDefault seccomp) |
+| Pod Security | cluster-wide PSA default: **enforce `baseline`**, warn/audit `restricted` (verified in apiserver admission config); we still author restricted-compliant manifests. `local-path-storage` ns needed an explicit `privileged` label so the provisioner's hostPath helper pods can run (applied 2026-07-21 — first PVC ever provisioned on this cluster) |
+| Images | local registry `10.20.0.1:5050` (registry:3 on rootful docker, Talos bridge). Push via `crane push --insecure`; nodes need a one-time Talos machine-config registry-mirror patch |
 | Local LLM | llama-swap on the host, reachable from pods at `http://10.20.0.1:9292/v1` (verified in-cluster); models `gemma-4-12b-it`, `gpt-oss-20b`, `qwen3.6-35b-a3b` (aliases: `gemma`, `gpt-oss`, `qwen`) |
 
 ### kagent (v0.9.12 stable, pre-1.0, releases every few days)
