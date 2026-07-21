@@ -30,6 +30,14 @@ spec:
       jsonPointers:
         - /automountServiceAccountToken
         - /metadata/labels
+    # The controller also adopts the chart's Service, converting it into the
+    # Gateway's LoadBalancer (type, ports, labels) — runtime-owned as well.
+    - kind: Service
+      name: agentgateway
+      namespace: agentgateway-system
+      jsonPointers:
+        - /spec
+        - /metadata/labels
   syncPolicy:
     automated:
       prune: true
