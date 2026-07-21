@@ -40,6 +40,21 @@ api-deploy: api-build api-push ## Build, push, and restart the API deployment
 	$(KUBECTL) rollout restart deployment/platform-api -n platform
 	$(KUBECTL) rollout status deployment/platform-api -n platform --timeout=120s
 
+.PHONY: portal-build
+portal-build: ## Build the portal image
+	docker build -t $(REGISTRY)/platform-portal:dev apps/portal
+
+.PHONY: portal-push
+portal-push: ## Push portal image to the homelab registry
+	docker save $(REGISTRY)/platform-portal:dev -o $(SCRATCH)/platform-portal.tar
+	crane push --insecure $(SCRATCH)/platform-portal.tar $(REGISTRY)/platform-portal:dev
+	rm -f $(SCRATCH)/platform-portal.tar
+
+.PHONY: portal-deploy
+portal-deploy: portal-build portal-push ## Build, push, and restart the portal deployment
+	$(KUBECTL) rollout restart deployment/platform-portal -n platform
+	$(KUBECTL) rollout status deployment/platform-portal -n platform --timeout=120s
+
 .PHONY: smoke
 smoke: ## End-to-end smoke test: agent + MCP tool round trip over A2A
 	bash scripts/smoke.sh
