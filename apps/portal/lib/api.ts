@@ -7,6 +7,17 @@ export const API_BASE =
 
 export const DEFAULT_NAMESPACE = "kagent";
 
+// Kubernetes resource names must be lowercase RFC 1123; applied live in the
+// name inputs so users can type "Microsoft MCP" and get "microsoft-mcp".
+export function slugifyName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9.-]/g, "")
+    .replace(/^[-.]+/, "")
+    .slice(0, 63);
+}
+
 export class ApiError extends Error {
   status: number;
 
@@ -131,6 +142,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await res.json();
       if (body && typeof body.detail === "string") detail = body.detail;
+      // FastAPI validation errors: detail is a list of {loc, msg, ...}
+      else if (body && Array.isArray(body.detail))
+        detail = body.detail
+          .map((d: { loc?: (string | number)[]; msg?: string }) =>
+            [d.loc?.slice(1).join("."), d.msg].filter(Boolean).join(": "),
+          )
+          .join("; ");
     } catch {
       // response wasn't JSON, fall back to statusText
     }
@@ -227,6 +245,13 @@ export async function streamAgent(
     try {
       const body = await res.json();
       if (body && typeof body.detail === "string") detail = body.detail;
+      // FastAPI validation errors: detail is a list of {loc, msg, ...}
+      else if (body && Array.isArray(body.detail))
+        detail = body.detail
+          .map((d: { loc?: (string | number)[]; msg?: string }) =>
+            [d.loc?.slice(1).join("."), d.msg].filter(Boolean).join(": "),
+          )
+          .join("; ");
     } catch {
       // response wasn't JSON, fall back to statusText
     }

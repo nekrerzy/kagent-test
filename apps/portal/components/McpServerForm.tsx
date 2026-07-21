@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, McpServerIn, Protocol, createMcpServer } from "@/lib/api";
+import { ApiError, McpServerIn, Protocol, createMcpServer, slugifyName } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { TagsInput } from "@/components/TagsInput";
 
@@ -47,7 +47,7 @@ export function McpServerForm() {
           id="name"
           required
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setName(slugifyName(e.target.value))}
           className="field-input"
         />
       </div>

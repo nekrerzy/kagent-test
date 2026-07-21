@@ -13,9 +13,27 @@ construction; FastAPI serializes responses by alias by default, so the wire
 shape still matches the spec exactly).
 """
 
-from typing import Any, Literal
+import re
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+
+_K8S_NAME_RE = re.compile(r"^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$")
+
+
+def _validate_k8s_name(value: str) -> str:
+    if not _K8S_NAME_RE.match(value):
+        raise ValueError(
+            "must be a valid Kubernetes resource name: lowercase letters, digits and '-', "
+            "starting and ending with a letter or digit (e.g. 'microsoft-mcp')"
+        )
+    return value
+
+
+# Resource names become Kubernetes object names (and often Service/DNS names),
+# so they must satisfy RFC 1123 — reject early with a readable message instead
+# of letting the apiserver's regex error surface to users.
+K8sName = Annotated[str, AfterValidator(_validate_k8s_name)]
 
 Protocol = Literal["SSE", "STREAMABLE_HTTP"]
 
@@ -41,7 +59,7 @@ class ToolRef(BaseModel):
 class AgentIn(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    name: str
+    name: K8sName
     namespace: str | None = None
     description: str | None = None
     system_message: str
@@ -56,7 +74,7 @@ class AgentOut(AgentIn):
 
 
 class McpServerIn(BaseModel):
-    name: str
+    name: K8sName
     namespace: str | None = None
     description: str | None = None
     url: str
@@ -75,7 +93,7 @@ class McpServerOut(McpServerIn):
 
 
 class ModelConfigIn(BaseModel):
-    name: str
+    name: K8sName
     namespace: str | None = None
     provider: ModelProvider = "OpenAI"
     model: str

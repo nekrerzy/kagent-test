@@ -8,6 +8,7 @@ import {
   createModelConfig,
   deleteModelConfig,
   listModelConfigs,
+  slugifyName,
 } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { useToast } from "@/components/Toast";
@@ -129,7 +130,7 @@ export default function ModelConfigsPage() {
               id="name"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(slugifyName(e.target.value))}
               className="field-input"
             />
           </div>

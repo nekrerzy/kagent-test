@@ -10,6 +10,7 @@ import {
   listMcpServers,
   listModelConfigs,
   updateAgent,
+  slugifyName,
 } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { useToast } from "@/components/Toast";
@@ -126,7 +127,7 @@ export function AgentForm({ mode, namespace, initial }: AgentFormProps) {
           required
           disabled={mode === "edit"}
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setName(slugifyName(e.target.value))}
           className="field-input disabled:opacity-60"
         />
       </div>
