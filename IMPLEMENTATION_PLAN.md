@@ -131,7 +131,7 @@ Consumes only the platform API. Pages:
 
 **Exit criteria:** a non-developer can create an agent, attach tools, and chat with it entirely from the portal.
 
-### Phase 3 — agentgateway integration (governed exposure + federation)
+### Phase 3 — agentgateway integration (governed exposure + federation) — **DONE 2026-07-21** except observability (see docs/phase-3.md; OTel/Jaeger still pending)
 1. **LLM egress through the gateway**: point kagent `ModelConfig.baseUrl` at the agentgateway LLM route → cost/token attribution, failover, guardrails hooks.
 2. **A2A exposure**: when an agent is created via the platform, the API also reconciles `AgentgatewayBackend` + `HTTPRoute` (agent Service marked `appProtocol: kgateway.dev/a2a`) so it's reachable at a stable external A2A URL. Deleting the agent garbage-collects the routes.
 3. **Virtual MCP endpoint**: all registered MCP servers federated behind one multiplexed MCP URL (namespaced tools) — the platform's headline "one endpoint to consume the whole catalog" feature.
