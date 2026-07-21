@@ -42,6 +42,9 @@ async def probe_mcp(url: str, protocol: str) -> dict[str, Any]:
             "error": f"no MCP response within {PROBE_TIMEOUT_SECONDS:.0f}s "
             f"(is the URL reachable from the cluster and the protocol {protocol} correct?)",
         }
-    except Exception as exc:  # anyio wraps transport failures in various types
-        detail = str(exc).strip() or type(exc).__name__
+    except Exception as exc:  # anyio wraps transport failures in exception groups
+        leaf: BaseException = exc
+        while isinstance(leaf, BaseExceptionGroup):
+            leaf = leaf.exceptions[0]
+        detail = str(leaf).strip() or type(leaf).__name__
         return {"reachable": False, "tools": [], "error": detail}
