@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from typing import Annotated
@@ -69,8 +70,34 @@ async def invoke_agent(namespace: str, name: str, body: InvokeIn) -> InvokeOut:
 @router.post("/{namespace}/{name}/invoke/stream")
 async def invoke_agent_stream(namespace: str, name: str, body: InvokeIn) -> StreamingResponse:
     async def sse() -> AsyncIterator[str]:
-        async for event in kagent_client.stream_agent(namespace, name, body.text, body.session_id):
-            yield f"data: {json.dumps(event)}\n\n"
+        # Keepalive comments during quiet stretches (model thinking, tool calls)
+        # give the client early bytes and keep proxies from idle-closing. A
+        # producer task + queue so the timeout cancels only the queue.get(),
+        # never the underlying generator (wait_for(anext(...)) would tear it down).
+        queue: asyncio.Queue[dict | None] = asyncio.Queue()
+
+        async def pump() -> None:
+            try:
+                async for event in kagent_client.stream_agent(
+                    namespace, name, body.text, body.session_id
+                ):
+                    await queue.put(event)
+            finally:
+                await queue.put(None)
+
+        producer = asyncio.create_task(pump())
+        try:
+            while True:
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=10.0)
+                except TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
+                if event is None:
+                    break
+                yield f"data: {json.dumps(event)}\n\n"
+        finally:
+            producer.cancel()
 
     return StreamingResponse(
         sse(),

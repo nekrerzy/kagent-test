@@ -121,3 +121,8 @@ spec:
     - backendRefs:
         - name: platform-api
           port: 80
+      # Envoy's default 15s route timeout severs SSE agent streams mid-response
+      # (local LLM generations regularly run minutes).
+      timeouts:
+        request: 900s
+        backendRequest: 900s
