@@ -610,8 +610,9 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    border-radius: var(--radius-lg);
-    background: radial-gradient(130% 100% at 50% -10%, #dff0ee 0%, var(--color-bg) 55%);
+    /* subtle top wash that fades to transparent — a bounded gradient with a
+       radius reads as a floating gray box against the page background */
+    background: radial-gradient(90% 70% at 50% 0%, rgba(18, 140, 130, 0.07) 0%, transparent 70%);
   }
 
   .quick-eyebrow {
