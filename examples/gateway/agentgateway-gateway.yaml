@@ -1,12 +1,15 @@
 # Lives under examples/ (wave 2) rather than infra/agentgateway/ so it's
 # guaranteed to sync after the agentgateway controller + GatewayClass (wave 1)
 # exist, without adding a third source to the agentgateway Application.
+# Named platform-gw: a Gateway named "agentgateway" here collides with the
+# chart's own control-plane Deployment (the controller derives proxy resource
+# names from the Gateway name) and the proxy never deploys.
 # No static IP annotation: MetalLB (pool 10.20.0.100-200) assigns the next free
 # address to the LoadBalancer Service the controller provisions for this Gateway.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: agentgateway
+  name: platform-gw
   namespace: agentgateway-system
 spec:
   gatewayClassName: agentgateway

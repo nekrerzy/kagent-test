@@ -20,28 +20,9 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: agentgateway-system
-  # The agentgateway controller adopts and mutates the chart-created
-  # ServiceAccount (labels, automountServiceAccountToken) at runtime; without
-  # ignoring those fields, selfHeal fights the controller forever.
-  ignoreDifferences:
-    - kind: ServiceAccount
-      name: agentgateway
-      namespace: agentgateway-system
-      jsonPointers:
-        - /automountServiceAccountToken
-        - /metadata/labels
-    # The controller also adopts the chart's Service, converting it into the
-    # Gateway's LoadBalancer (type, ports, labels) — runtime-owned as well.
-    - kind: Service
-      name: agentgateway
-      namespace: agentgateway-system
-      jsonPointers:
-        - /spec
-        - /metadata/labels
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - RespectIgnoreDifferences=true
