@@ -1,103 +1,194 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getCatalog } from "@/lib/api";
+import { useApi } from "@/lib/useApi";
+import { ErrorBanner } from "@/components/ErrorBanner";
+import { ReadyBadge, Tag } from "@/components/Badge";
+
+function CatalogPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const [draft, setDraft] = useState(q);
+
+  const { data, error, loading } = useApi(() => getCatalog(q || undefined), [q]);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (draft) params.set("q", draft);
+    router.push(params.size ? `/?${params}` : "/");
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="flex flex-col gap-10">
+      <form onSubmit={submitSearch} className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Search agents, MCP servers, model configs…"
+          className="field-input max-w-lg"
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        <button type="submit" className="btn-primary">
+          Search
+        </button>
+        {q && (
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setDraft("");
+              router.push("/");
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </form>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {error && <ErrorBanner message={error} />}
+
+      <Section title="Agents" loading={loading}>
+        {data?.agents.length ? (
+          <Grid>
+            {data.agents.map((agent) => (
+              <Link
+                key={`${agent.namespace}/${agent.name}`}
+                href={`/agents/${agent.namespace}/${agent.name}`}
+                className="card-link"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium">{agent.name}</h3>
+                  <ReadyBadge ready={agent.ready} />
+                </div>
+                {agent.description && (
+                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                    {agent.description}
+                  </p>
+                )}
+                {agent.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {agent.tags.map((tag) => (
+                      <Tag key={tag}>{tag}</Tag>
+                    ))}
+                  </div>
+                )}
+              </Link>
+            ))}
+          </Grid>
+        ) : (
+          !loading && <Empty label="No agents yet." href="/agents/new" cta="Create one" />
+        )}
+      </Section>
+
+      <Section title="MCP Servers" loading={loading}>
+        {data?.mcp_servers.length ? (
+          <Grid>
+            {data.mcp_servers.map((server) => (
+              <Link
+                key={`${server.namespace}/${server.name}`}
+                href={`/mcp-servers/${server.namespace}/${server.name}`}
+                className="card-link"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium">{server.name}</h3>
+                  <ReadyBadge ready={server.ready} />
+                </div>
+                {server.description && (
+                  <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                    {server.description}
+                  </p>
+                )}
+                <p className="mt-3 text-xs" style={{ color: "var(--muted)" }}>
+                  {server.discovered_tools.length} tool
+                  {server.discovered_tools.length === 1 ? "" : "s"}
+                  {server.discovered_tools.length > 0 &&
+                    `: ${server.discovered_tools
+                      .slice(0, 4)
+                      .map((t) => t.name)
+                      .join(", ")}${server.discovered_tools.length > 4 ? "…" : ""}`}
+                </p>
+              </Link>
+            ))}
+          </Grid>
+        ) : (
+          !loading && (
+            <Empty label="No MCP servers yet." href="/mcp-servers/new" cta="Register one" />
+          )
+        )}
+      </Section>
+
+      <Section title="Model Configs" loading={loading}>
+        {data?.model_configs.length ? (
+          <Grid>
+            {data.model_configs.map((mc) => (
+              <div key={`${mc.namespace}/${mc.name}`} className="card-link">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium">{mc.name}</h3>
+                  <ReadyBadge ready={mc.ready} />
+                </div>
+                <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+                  {mc.provider} · {mc.model}
+                </p>
+              </div>
+            ))}
+          </Grid>
+        ) : (
+          !loading && (
+            <Empty
+              label="No model configs yet."
+              href="/model-configs"
+              cta="Create one"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          )
+        )}
+      </Section>
     </div>
+  );
+}
+
+function Section({
+  title,
+  loading,
+  children,
+}: {
+  title: string;
+  loading: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {loading && <span className="text-xs" style={{ color: "var(--muted)" }}>loading…</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
+}
+
+function Empty({ label, href, cta }: { label: string; href: string; cta: string }) {
+  return (
+    <div className="surface rounded-lg px-4 py-6 text-center text-sm" style={{ color: "var(--muted)" }}>
+      <p>{label}</p>
+      <Link href={href} className="mt-2 inline-block" style={{ color: "var(--accent)" }}>
+        {cta} →
+      </Link>
+    </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense>
+      <CatalogPageInner />
+    </Suspense>
   );
 }
