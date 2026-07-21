@@ -21,6 +21,7 @@ class FakeK8sClient:
         # Non-kagent objects (gateway backends, HTTPRoutes), keyed like
         # K8sClient's generic methods address them.
         self.objects: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+        self.configmaps: dict[tuple[str, str], dict[str, Any]] = {}
         self._resource_version = 0
 
     def list_objects(
@@ -93,6 +94,29 @@ class FakeK8sClient:
 
     def delete_secret(self, namespace: str, name: str) -> None:
         self.secrets.pop((namespace, name), None)
+
+    def list_configmaps(self, namespace: str, label_selector: str) -> list[dict[str, Any]]:
+        key, _, value = label_selector.partition("=")
+        return [
+            copy.deepcopy(obj)
+            for (ns, _n), obj in self.configmaps.items()
+            if ns == namespace and (obj["metadata"].get("labels") or {}).get(key) == value
+        ]
+
+    def get_configmap(self, namespace: str, name: str) -> dict[str, Any]:
+        try:
+            return copy.deepcopy(self.configmaps[(namespace, name)])
+        except KeyError:
+            raise HTTPException(status_code=404, detail="resource not found") from None
+
+    def put_configmap(self, namespace: str, body: dict[str, Any]) -> dict[str, Any]:
+        self.configmaps[(namespace, body["metadata"]["name"])] = copy.deepcopy(body)
+        return copy.deepcopy(body)
+
+    def delete_configmap(self, namespace: str, name: str) -> None:
+        if (namespace, name) not in self.configmaps:
+            raise HTTPException(status_code=404, detail="resource not found")
+        del self.configmaps[(namespace, name)]
 
 
 @pytest.fixture

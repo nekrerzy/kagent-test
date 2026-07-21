@@ -29,6 +29,9 @@ from platform_api.schemas import (
     McpServerOut,
     ModelConfigIn,
     ModelConfigOut,
+    SkillGitRef,
+    SkillIn,
+    SkillOut,
     ToolRef,
 )
 
@@ -69,25 +72,41 @@ def _condition_true(status: dict[str, Any], condition_type: str) -> bool | None:
 
 
 def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
-    tools: list[dict[str, Any]] = []
-    for tool in agent.tools:
-        mcp_server: dict[str, Any] = {
-            "kind": "RemoteMCPServer",
-            "apiGroup": GROUP,
-            "name": tool.mcp_server,
+    spec: dict[str, Any]
+    if agent.type == "BYO":
+        spec = {"type": "BYO", "byo": {"deployment": {"image": agent.image}}}
+    else:
+        tools: list[dict[str, Any]] = []
+        for tool in agent.tools:
+            mcp_server: dict[str, Any] = {
+                "kind": "RemoteMCPServer",
+                "apiGroup": GROUP,
+                "name": tool.mcp_server,
+            }
+            if tool.tool_names:
+                mcp_server["toolNames"] = tool.tool_names
+            tools.append({"type": "McpServer", "mcpServer": mcp_server})
+
+        declarative: dict[str, Any] = {"systemMessage": agent.system_message}
+        # kagent's controller does not fall back to its default when modelConfig is
+        # omitted — it fails with `ModelConfig "" not found` — so default it here.
+        declarative["modelConfig"] = agent.model_config_ref or "default-model-config"
+        if tools:
+            declarative["tools"] = tools
+        spec = {"type": "Declarative", "declarative": declarative}
+
+    if agent.skills:
+        spec["skills"] = {
+            "gitRefs": [
+                {
+                    "url": s.url,
+                    **({"name": s.name} if s.name else {}),
+                    **({"path": s.path} if s.path else {}),
+                    **({"ref": s.ref} if s.ref else {}),
+                }
+                for s in agent.skills
+            ]
         }
-        if tool.tool_names:
-            mcp_server["toolNames"] = tool.tool_names
-        tools.append({"type": "McpServer", "mcpServer": mcp_server})
-
-    declarative: dict[str, Any] = {"systemMessage": agent.system_message}
-    # kagent's controller does not fall back to its default when modelConfig is
-    # omitted — it fails with `ModelConfig "" not found` — so default it here.
-    declarative["modelConfig"] = agent.model_config_ref or "default-model-config"
-    if tools:
-        declarative["tools"] = tools
-
-    spec: dict[str, Any] = {"type": "Declarative", "declarative": declarative}
     if agent.description:
         spec["description"] = agent.description
 
@@ -122,13 +141,27 @@ def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
         if tool.get("type") == "McpServer" and tool.get("mcpServer")
     ]
 
+    skills = [
+        SkillGitRef(
+            url=ref.get("url", ""),
+            name=ref.get("name"),
+            path=ref.get("path"),
+            ref=ref.get("ref"),
+        )
+        for ref in (spec.get("skills") or {}).get("gitRefs") or []
+    ]
+
+    agent_type = spec.get("type", "Declarative")
     return AgentOut(
         name=name,
         namespace=namespace,
+        type="BYO" if agent_type == "BYO" else "Declarative",
         description=spec.get("description"),
-        system_message=declarative.get("systemMessage", ""),
+        system_message=declarative.get("systemMessage") or None,
         model_config=declarative.get("modelConfig"),
         tools=tools,
+        image=((spec.get("byo") or {}).get("deployment") or {}).get("image"),
+        skills=skills,
         tags=_tags_from_annotations(metadata.get("annotations")),
         ready=_condition_true(status, "Ready"),
         a2a_url=f"{a2a_base}/a2a/{namespace}/{name}",
@@ -221,4 +254,53 @@ def model_config_from_crd(obj: dict[str, Any]) -> ModelConfigOut:
         model=spec.get("model", ""),
         base_url=openai_cfg.get("baseUrl"),
         ready=_condition_true(status, "Accepted"),
+    )
+
+
+# --------------------------------------------------------------------------
+# Skill (stored as a labeled ConfigMap — no dedicated CRD exists for a skill
+# catalog entry; the git ref itself is what agents consume)
+# --------------------------------------------------------------------------
+
+SKILL_LABEL = "platform.kagent.dev/skill"
+
+
+def skill_to_configmap(skill: SkillIn, namespace: str) -> dict[str, Any]:
+    data = {"url": skill.url}
+    if skill.path:
+        data["path"] = skill.path
+    if skill.ref:
+        data["ref"] = skill.ref
+    if skill.description:
+        data["description"] = skill.description
+    if skill.tags:
+        data["tags"] = ",".join(skill.tags)
+    return {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": f"skill-{skill.name}",
+            "namespace": namespace,
+            "labels": {SKILL_LABEL: "true"},
+            "annotations": {"platform.kagent.dev/skill-name": skill.name},
+        },
+        "data": data,
+    }
+
+
+def skill_from_configmap(obj: dict[str, Any]) -> SkillOut:
+    metadata = obj.get("metadata") or {}
+    data = obj.get("data") or {}
+    name = (metadata.get("annotations") or {}).get(
+        "platform.kagent.dev/skill-name",
+        metadata.get("name", "").removeprefix("skill-"),
+    )
+    return SkillOut(
+        name=name,
+        namespace=metadata.get("namespace", ""),
+        url=data.get("url", ""),
+        path=data.get("path"),
+        ref=data.get("ref"),
+        description=data.get("description"),
+        tags=[t for t in data.get("tags", "").split(",") if t],
     )

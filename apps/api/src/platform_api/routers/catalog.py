@@ -60,6 +60,10 @@ def get_catalog(
     model_configs = [
         mappers.model_config_from_crd(obj) for obj in k8s.list(PLURAL_MODEL_CONFIGS, ns)
     ]
+    skills = [
+        mappers.skill_from_configmap(cm)
+        for cm in k8s.list_configmaps(ns, f"{mappers.SKILL_LABEL}=true")
+    ]
 
     if q:
         q_lower = q.lower()
@@ -71,5 +75,6 @@ def get_catalog(
         agents=agents,
         mcp_servers=mcp_servers,
         model_configs=model_configs,
+        skills=skills,
         mcp_endpoint=f"{settings.gateway_external_base}/mcp" if mcp_servers else None,
     )

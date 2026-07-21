@@ -55,6 +55,19 @@ controller:
     mode: unsecure
 
 # ==============================================================================
+# OTEL TRACING — export to Jaeger (infra/observability/jaeger.yaml)
+# ==============================================================================
+# Only overriding enabled + endpoint; chart defaults for the rest already
+# match (protocol: grpc, insecure: true, timeout: 15000ms) — see
+# `helm show values oci://ghcr.io/kagent-dev/kagent/helm/kagent --version 0.9.12`.
+otel:
+  tracing:
+    enabled: true
+    exporter:
+      otlp:
+        endpoint: "jaeger.observability.svc.cluster.local:4317"
+
+# ==============================================================================
 # KMCP — disabled here; installed separately by infra/argocd/apps/kmcp.yaml
 # ==============================================================================
 # This chart bundles its own kmcp controller subchart (condition kmcp.enabled,

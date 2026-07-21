@@ -16,7 +16,7 @@ shape still matches the spec exactly).
 import re
 from typing import Annotated, Any, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 _K8S_NAME_RE = re.compile(r"^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$")
 
@@ -56,16 +56,38 @@ class ToolRef(BaseModel):
     tool_names: list[str] | None = None
 
 
+class SkillGitRef(BaseModel):
+    """A git-hosted skill folder attached to an agent (kagent skills.gitRefs)."""
+
+    url: str
+    name: str | None = None
+    path: str | None = None
+    ref: str | None = None
+
+
 class AgentIn(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: K8sName
     namespace: str | None = None
+    type: Literal["Declarative", "BYO"] = "Declarative"
     description: str | None = None
-    system_message: str
+    # Declarative agents only.
+    system_message: str | None = None
     model_config_ref: str | None = Field(default=None, alias="model_config")
     tools: list[ToolRef] = Field(default_factory=list)
+    # BYO agents only: container image serving A2A on port 8080.
+    image: str | None = None
+    skills: list[SkillGitRef] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _type_requirements(self) -> "AgentIn":
+        if self.type == "Declarative" and not self.system_message:
+            raise ValueError("system_message is required for Declarative agents")
+        if self.type == "BYO" and not self.image:
+            raise ValueError("image is required for BYO agents")
+        return self
 
 
 class AgentOut(AgentIn):
@@ -85,6 +107,23 @@ class McpServerIn(BaseModel):
 class DiscoveredTool(BaseModel):
     name: str
     description: str
+
+
+class SkillIn(BaseModel):
+    """Catalog entry for a reusable skill: a folder (SKILL.md + resources) in a
+    git repo, attachable to agents via kagent's skills.gitRefs."""
+
+    name: K8sName
+    namespace: str | None = None
+    url: str
+    path: str | None = None
+    ref: str | None = None
+    description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
+class SkillOut(SkillIn):
+    pass
 
 
 class McpProbeIn(BaseModel):
@@ -139,6 +178,7 @@ class CatalogOut(BaseModel):
     agents: list[AgentOut]
     mcp_servers: list[McpServerOut]
     model_configs: list[ModelConfigOut]
+    skills: list[SkillOut] = Field(default_factory=list)
     # Single federated MCP URL (agentgateway multiplex) serving every
     # registered server's tools, namespaced per server.
     mcp_endpoint: str | None = None

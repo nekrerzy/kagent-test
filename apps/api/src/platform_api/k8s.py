@@ -181,6 +181,45 @@ class K8sClient:
                 return
             raise _map_api_exception(exc) from exc
 
+    def list_configmaps(self, namespace: str, label_selector: str) -> list[dict[str, Any]]:
+        self._require_config()
+        try:
+            result = self._core.list_namespaced_config_map(
+                namespace, label_selector=label_selector
+            )
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+        return [self._core.api_client.sanitize_for_serialization(cm) for cm in result.items]
+
+    def get_configmap(self, namespace: str, name: str) -> dict[str, Any]:
+        self._require_config()
+        try:
+            cm = self._core.read_namespaced_config_map(name, namespace)
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+        return self._core.api_client.sanitize_for_serialization(cm)
+
+    def put_configmap(self, namespace: str, body: dict[str, Any]) -> dict[str, Any]:
+        self._require_config()
+        name = body["metadata"]["name"]
+        try:
+            created = self._core.create_namespaced_config_map(namespace, body)
+        except ApiException as exc:
+            if exc.status != 409:
+                raise _map_api_exception(exc) from exc
+            try:
+                created = self._core.replace_namespaced_config_map(name, namespace, body)
+            except ApiException as exc2:
+                raise _map_api_exception(exc2) from exc2
+        return self._core.api_client.sanitize_for_serialization(created)
+
+    def delete_configmap(self, namespace: str, name: str) -> None:
+        self._require_config()
+        try:
+            self._core.delete_namespaced_config_map(name, namespace)
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+
     def put_secret(self, namespace: str, name: str, string_data: dict[str, str]) -> None:
         """Create the Secret, or replace it in place if it already exists."""
         self._require_config()

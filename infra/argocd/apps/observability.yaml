@@ -1,0 +1,25 @@
+# Wave 2 (after kagent/agentgateway controllers are up in wave 1): the
+# AgentgatewayPolicy in this directory targets the platform-gw Gateway, which
+# the agentgateway controller (wave 1) must already be able to reconcile.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nekrerzy/kagent-test.git
+    targetRevision: main
+    path: infra/observability
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
