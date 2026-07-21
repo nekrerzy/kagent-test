@@ -104,7 +104,7 @@ def agent_to_crd(agent: AgentIn, namespace: str) -> dict[str, Any]:
     }
 
 
-def agent_from_crd(obj: dict[str, Any], kagent_api_base: str) -> AgentOut:
+def agent_from_crd(obj: dict[str, Any], a2a_base: str) -> AgentOut:
     metadata = obj.get("metadata") or {}
     spec = obj.get("spec") or {}
     status = obj.get("status") or {}
@@ -131,7 +131,7 @@ def agent_from_crd(obj: dict[str, Any], kagent_api_base: str) -> AgentOut:
         tools=tools,
         tags=_tags_from_annotations(metadata.get("annotations")),
         ready=_condition_true(status, "Ready"),
-        a2a_url=f"{kagent_api_base}/api/a2a/{namespace}/{name}",
+        a2a_url=f"{a2a_base}/a2a/{namespace}/{name}",
     )
 
 

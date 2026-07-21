@@ -139,3 +139,6 @@ class CatalogOut(BaseModel):
     agents: list[AgentOut]
     mcp_servers: list[McpServerOut]
     model_configs: list[ModelConfigOut]
+    # Single federated MCP URL (agentgateway multiplex) serving every
+    # registered server's tools, namespaced per server.
+    mcp_endpoint: str | None = None

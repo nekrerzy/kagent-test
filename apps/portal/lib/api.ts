@@ -102,6 +102,8 @@ export interface CatalogOut {
   agents: AgentOut[];
   mcp_servers: McpServerOut[];
   model_configs: ModelConfigOut[];
+  // One federated MCP URL serving every registered server's tools.
+  mcp_endpoint?: string | null;
 }
 
 export interface InvokeIn {

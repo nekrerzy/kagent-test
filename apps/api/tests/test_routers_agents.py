@@ -13,7 +13,7 @@ def test_create_and_get_agent(client):
     body = resp.json()
     assert body["name"] == "hello-agent"
     assert body["model_config"] == "default-model-config"
-    assert body["a2a_url"].endswith("/api/a2a/kagent/hello-agent")
+    assert body["a2a_url"] == "http://10.20.0.101/a2a/kagent/hello-agent"
 
     resp = client.get("/v1/agents/kagent/hello-agent")
     assert resp.status_code == 200

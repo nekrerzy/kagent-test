@@ -31,8 +31,7 @@ async def probe_mcp(url: str, protocol: str) -> dict[str, Any]:
                     await session.initialize()
                     listing = await session.list_tools()
                     tools = [
-                        {"name": t.name, "description": t.description or ""}
-                        for t in listing.tools
+                        {"name": t.name, "description": t.description or ""} for t in listing.tools
                     ]
                     return {"reachable": True, "tools": tools, "error": None}
     except TimeoutError:

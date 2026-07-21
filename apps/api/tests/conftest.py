@@ -18,7 +18,31 @@ class FakeK8sClient:
     def __init__(self) -> None:
         self.store: dict[tuple[str, str, str], dict[str, Any]] = {}
         self.secrets: dict[tuple[str, str], dict[str, str]] = {}
+        # Non-kagent objects (gateway backends, HTTPRoutes), keyed like
+        # K8sClient's generic methods address them.
+        self.objects: dict[tuple[str, str, str, str], dict[str, Any]] = {}
         self._resource_version = 0
+
+    def list_objects(
+        self, group: str, version: str, plural: str, namespace: str
+    ) -> list[dict[str, Any]]:
+        return [
+            copy.deepcopy(obj)
+            for (g, p, ns, _n), obj in self.objects.items()
+            if g == group and p == plural and ns == namespace
+        ]
+
+    def put_object(
+        self, group: str, version: str, plural: str, namespace: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        key = (group, plural, namespace, body["metadata"]["name"])
+        self.objects[key] = copy.deepcopy(body)
+        return copy.deepcopy(body)
+
+    def delete_object(
+        self, group: str, version: str, plural: str, namespace: str, name: str
+    ) -> None:
+        self.objects.pop((group, plural, namespace, name), None)
 
     def get(self, plural: str, namespace: str, name: str) -> dict[str, Any]:
         key = (plural, namespace, name)

@@ -51,7 +51,8 @@ def get_catalog(
     ns = namespace or settings.default_namespace
 
     agents = [
-        mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)
+        mappers.agent_from_crd(obj, settings.gateway_external_base)
+        for obj in k8s.list(PLURAL_AGENTS, ns)
     ]
     mcp_servers = [
         mappers.mcp_server_from_crd(obj) for obj in k8s.list(PLURAL_REMOTE_MCP_SERVERS, ns)
@@ -66,4 +67,9 @@ def get_catalog(
         mcp_servers = [m for m in mcp_servers if _mcp_server_matches(q_lower, m)]
         model_configs = [m for m in model_configs if _model_config_matches(q_lower, m)]
 
-    return CatalogOut(agents=agents, mcp_servers=mcp_servers, model_configs=model_configs)
+    return CatalogOut(
+        agents=agents,
+        mcp_servers=mcp_servers,
+        model_configs=model_configs,
+        mcp_endpoint=f"{settings.gateway_external_base}/mcp" if mcp_servers else None,
+    )

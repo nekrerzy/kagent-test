@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     # on port 8083 (see `kubectl -n kagent get svc`).
     kagent_api_base: str = "http://kagent-controller.kagent.svc.cluster.local:8083"
 
+    # agentgateway integration: namespace + Gateway name the platform writes
+    # AgentgatewayBackend/HTTPRoute objects into, and the externally reachable
+    # base (the platform-gw MetalLB address) used to build published URLs.
+    gateway_namespace: str = "agentgateway-system"
+    gateway_name: str = "platform-gw"
+    gateway_external_base: str = "http://10.20.0.101"
+
 
 @lru_cache
 def get_settings() -> Settings:

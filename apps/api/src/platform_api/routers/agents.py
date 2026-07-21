@@ -1,15 +1,18 @@
 import asyncio
 import json
+import logging
 from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
-from platform_api import kagent_client, mappers
+from platform_api import gateway, kagent_client, mappers
 from platform_api.config import Settings, get_settings
 from platform_api.k8s import K8sClient, PLURAL_AGENTS, get_k8s_client
 from platform_api.schemas import AgentIn, AgentOut, InvokeIn, InvokeOut
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/agents", tags=["agents"])
 
@@ -23,7 +26,8 @@ def list_agents(
 ) -> list[AgentOut]:
     ns = namespace or settings.default_namespace
     return [
-        mappers.agent_from_crd(obj, settings.kagent_api_base) for obj in k8s.list(PLURAL_AGENTS, ns)
+        mappers.agent_from_crd(obj, settings.gateway_external_base)
+        for obj in k8s.list(PLURAL_AGENTS, ns)
     ]
 
 
@@ -31,13 +35,19 @@ def list_agents(
 def create_agent(agent: AgentIn, k8s: K8sDep, settings: SettingsDep) -> AgentOut:
     ns = agent.namespace or settings.default_namespace
     created = k8s.create(PLURAL_AGENTS, ns, mappers.agent_to_crd(agent, ns))
-    return mappers.agent_from_crd(created, settings.kagent_api_base)
+    # Gateway exposure is best-effort: the agent exists either way, and a
+    # failed exposure heals on the next create/delete cycle.
+    try:
+        gateway.ensure_agent_exposure(k8s, settings, ns, agent.name)
+    except Exception:
+        logger.exception("failed to expose agent %s/%s through the gateway", ns, agent.name)
+    return mappers.agent_from_crd(created, settings.gateway_external_base)
 
 
 @router.get("/{namespace}/{name}", response_model=AgentOut)
 def get_agent(namespace: str, name: str, k8s: K8sDep, settings: SettingsDep) -> AgentOut:
     obj = k8s.get(PLURAL_AGENTS, namespace, name)
-    return mappers.agent_from_crd(obj, settings.kagent_api_base)
+    return mappers.agent_from_crd(obj, settings.gateway_external_base)
 
 
 @router.put("/{namespace}/{name}", response_model=AgentOut)
@@ -48,12 +58,21 @@ def update_agent(
     body = mappers.agent_to_crd(agent, namespace)
     body["metadata"]["resourceVersion"] = existing["metadata"]["resourceVersion"]
     updated = k8s.replace(PLURAL_AGENTS, namespace, name, body)
-    return mappers.agent_from_crd(updated, settings.kagent_api_base)
+    # Also heals exposure for agents that predate the gateway integration.
+    try:
+        gateway.ensure_agent_exposure(k8s, settings, namespace, name)
+    except Exception:
+        logger.exception("failed to expose agent %s/%s through the gateway", namespace, name)
+    return mappers.agent_from_crd(updated, settings.gateway_external_base)
 
 
 @router.delete("/{namespace}/{name}", status_code=204)
-def delete_agent(namespace: str, name: str, k8s: K8sDep) -> None:
+def delete_agent(namespace: str, name: str, k8s: K8sDep, settings: SettingsDep) -> None:
     k8s.delete(PLURAL_AGENTS, namespace, name)
+    try:
+        gateway.remove_agent_exposure(k8s, settings, namespace, name)
+    except Exception:
+        logger.exception("failed to remove gateway exposure for %s/%s", namespace, name)
 
 
 @router.get("/{namespace}/{name}/card")

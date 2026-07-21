@@ -128,6 +128,59 @@ class K8sClient:
         except ApiException as exc:
             raise _map_api_exception(exc) from exc
 
+    # Group-generic variants for non-kagent objects (agentgateway backends,
+    # Gateway API HTTPRoutes). The kagent-specific methods above keep their
+    # simpler signatures.
+
+    def list_objects(
+        self, group: str, version: str, plural: str, namespace: str
+    ) -> list[dict[str, Any]]:
+        self._require_config()
+        try:
+            result = self._custom.list_namespaced_custom_object(group, version, namespace, plural)
+        except ApiException as exc:
+            raise _map_api_exception(exc) from exc
+        return result.get("items", [])
+
+    def put_object(
+        self, group: str, version: str, plural: str, namespace: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Create the object, or replace it (fresh resourceVersion) if it exists."""
+        self._require_config()
+        name = body["metadata"]["name"]
+        try:
+            return self._custom.create_namespaced_custom_object(
+                group, version, namespace, plural, body
+            )
+        except ApiException as exc:
+            if exc.status != 409:
+                raise _map_api_exception(exc) from exc
+        for attempt in range(3):
+            try:
+                current = self._custom.get_namespaced_custom_object(
+                    group, version, namespace, plural, name
+                )
+                body["metadata"]["resourceVersion"] = current["metadata"]["resourceVersion"]
+                return self._custom.replace_namespaced_custom_object(
+                    group, version, namespace, plural, name, body
+                )
+            except ApiException as exc:
+                if exc.status != 409 or attempt == 2:
+                    raise _map_api_exception(exc) from exc
+        raise AssertionError("unreachable")
+
+    def delete_object(
+        self, group: str, version: str, plural: str, namespace: str, name: str
+    ) -> None:
+        """Delete, tolerating an already-missing object."""
+        self._require_config()
+        try:
+            self._custom.delete_namespaced_custom_object(group, version, namespace, plural, name)
+        except ApiException as exc:
+            if exc.status == 404:
+                return
+            raise _map_api_exception(exc) from exc
+
     def put_secret(self, namespace: str, name: str, string_data: dict[str, str]) -> None:
         """Create the Secret, or replace it in place if it already exists."""
         self._require_config()

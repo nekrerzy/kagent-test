@@ -51,6 +51,16 @@ function CatalogPageInner() {
 
       {error && <ErrorBanner message={error} />}
 
+      {data?.mcp_endpoint && (
+        <div
+          className="rounded-md border px-3 py-2 text-sm"
+          style={{ borderColor: "var(--border)" }}
+        >
+          Federated MCP endpoint (all registered servers, one URL):{" "}
+          <code className="select-all">{data.mcp_endpoint}</code>
+        </div>
+      )}
+
       <Section title="Agents" loading={loading}>
         {data?.agents.length ? (
           <Grid>

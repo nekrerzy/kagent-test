@@ -16,7 +16,7 @@ def test_agent_round_trip_minimal():
 
     crd["status"] = {}
     out = mappers.agent_from_crd(
-        crd, kagent_api_base="http://kagent-controller.kagent.svc.cluster.local:8083"
+        crd, a2a_base="http://kagent-controller.kagent.svc.cluster.local:8083"
     )
     assert out.name == "hello-agent"
     assert out.namespace == "kagent"
@@ -26,7 +26,7 @@ def test_agent_round_trip_minimal():
     assert out.ready is None
     assert (
         out.a2a_url
-        == "http://kagent-controller.kagent.svc.cluster.local:8083/api/a2a/kagent/hello-agent"
+        == "http://kagent-controller.kagent.svc.cluster.local:8083/a2a/kagent/hello-agent"
     )
 
 
@@ -59,7 +59,7 @@ def test_agent_round_trip_full():
     assert tools[1]["mcpServer"]["toolNames"] == ["add", "echo"]
     assert crd["metadata"]["annotations"] == {"platform.kagent.dev/tags": "demo,smoke-test"}
 
-    out = mappers.agent_from_crd(crd, kagent_api_base="http://base:8083")
+    out = mappers.agent_from_crd(crd, a2a_base="http://base:8083")
     assert out.description == "Phase 0 smoke-test agent."
     assert out.model_config_ref == "default-model-config"
     assert [t.mcp_server for t in out.tools] == ["hello-mcp-server", "other-mcp-server"]
@@ -74,11 +74,11 @@ def test_agent_from_crd_reads_ready_condition():
         "spec": {"type": "Declarative", "declarative": {"systemMessage": "hi"}},
         "status": {"conditions": [{"type": "Ready", "status": "True"}]},
     }
-    out = mappers.agent_from_crd(crd, kagent_api_base="http://base")
+    out = mappers.agent_from_crd(crd, a2a_base="http://base")
     assert out.ready is True
 
     crd["status"]["conditions"][0]["status"] = "False"
-    out = mappers.agent_from_crd(crd, kagent_api_base="http://base")
+    out = mappers.agent_from_crd(crd, a2a_base="http://base")
     assert out.ready is False
 
 

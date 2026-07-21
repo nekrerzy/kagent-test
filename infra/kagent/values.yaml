@@ -19,7 +19,10 @@ providers:
     # be committed to git — use a pre-created Secret + apiKeySecretRef instead.
     apiKey: "sk-local-llama-swap-dummy-not-a-real-key"
     config:
-      baseUrl: "http://10.20.0.1:9292/v1"
+      # LLM egress via agentgateway (examples/gateway/llm-egress.yaml): the
+      # platform-gw proxy forwards /v1 to llama-swap on 10.20.0.1:9292 and
+      # accounts tokens/costs per request on the way through.
+      baseUrl: "http://platform-gw.agentgateway-system.svc.cluster.local:80/v1"
 
 # ==============================================================================
 # DATABASE — bundled Postgres, dev/eval only, per chart default sizes
