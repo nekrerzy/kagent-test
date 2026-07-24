@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ApiError, streamAgent } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 
@@ -80,12 +82,18 @@ export function ChatPanel({ namespace, name }: { namespace: string; name: string
             msg.role === "agent" && !msg.text ? null : (
               <div
                 key={i}
-                className={`max-w-[85%] rounded-[var(--radius-md)] px-3.5 py-2.5 text-sm whitespace-pre-wrap ${
-                  msg.role === "user" ? "chat-bubble-user" : "chat-bubble-agent"
+                className={`max-w-[85%] rounded-[var(--radius-md)] px-3.5 py-2.5 text-sm ${
+                  msg.role === "user"
+                    ? "chat-bubble-user whitespace-pre-wrap"
+                    : "chat-bubble-agent chat-md"
                 }`}
                 style={{ alignSelf: msg.role === "user" ? "flex-end" : "flex-start" }}
               >
-                {msg.text}
+                {msg.role === "user" ? (
+                  msg.text
+                ) : (
+                  <Markdown remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
+                )}
               </div>
             ),
           )}
